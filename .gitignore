@@ -52,6 +52,7 @@ pip-wheel-metadata
 .project
 .pydevproject
 .settings
+Pipfile
 
 # Mac OSX
 .DS_Store
