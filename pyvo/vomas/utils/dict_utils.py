@@ -8,8 +8,8 @@ import json
 import re
 import urllib
 import ssl
+import numpy
 from pyvo.vomas.utils import logger
-from pyvo.vomas.utils.json_encoder import MyEncoder
 
 
 class DictUtils():
@@ -158,7 +158,6 @@ class DictUtils():
         :return: A pretty string representation of the dictionary
         :rtype: Python Dict
         """
-        from collections import OrderedDict
         return json.dumps(dictionnary,
                           indent=2,
                           #sort_keys=True,
@@ -262,3 +261,16 @@ class DictUtils():
         elif isinstance(dictionnary,list):
                 for list_item in dictionnary:
                     DictUtils._find_item_by_key(list_item, key, result)
+
+
+class MyEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, numpy.integer):
+            return int(obj)
+        elif isinstance(obj, numpy.floating):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
