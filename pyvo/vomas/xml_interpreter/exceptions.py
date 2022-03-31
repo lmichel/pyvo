@@ -7,5 +7,8 @@ Created on 11 Dec 2021
 class MappingException(Exception):
     pass
 
+class ParsingException(Exception):
+    pass
+
 class NotImplementedException(Exception):
     pass
