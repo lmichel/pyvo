@@ -3,7 +3,7 @@ Created on Jan 11, 2021
 
 @author: laurentmichel
 '''
-
+import numpy
 from pyvo.vomas.translator.vocabulary import Ele
 
 class JsonTools(object):
