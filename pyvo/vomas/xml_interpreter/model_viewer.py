@@ -381,12 +381,13 @@ class ModelViewer(object):
         initialize the annotation seeker
         The annotation seeker is let a None of no annotation
         """
-        for resource_meta in self._resource.resources:
-            logger.info("Find resource with @type=meta")
-            self._annotation_seeker = AnnotationSeeker(
-                etree.fromstring(resource_meta.model_mapping.mapping_block)
+        model_mapping = self._resource.model_mapping
+        if model_mapping is None:
+            logger.warning("No model annotation found in the resource")
+            return 
+        self._annotation_seeker = AnnotationSeeker(
+                etree.fromstring(model_mapping.mapping_block)
                 )
-            return
 
     def _squash_join_and_references(self):
         """
