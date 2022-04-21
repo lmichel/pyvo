@@ -9,7 +9,7 @@ import os
 from pyvo.vomas.utils.xml_utils import XmlUtils
 
 from pyvo.vomas.xml_interpreter.instance_browser import Instance
-from pyvo.vomas.xml_interpreter.exceptions import ParsingException
+from pyvo.vomas.xml_interpreter.exceptions import ParsingException, 
 
 class TestInstanceBrowser(unittest.TestCase):
 
