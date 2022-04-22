@@ -17,7 +17,8 @@ class TestMapppingBuilder(unittest.TestCase):
             os.path.join(self.data_path, "data/input/test.0.xml"))  
         
         aseeker = AnnotationSeeker(mapping_block.getroot())
-
+        print("=====================")
+        XmlUtils.pretty_print(aseeker.get_globals())
         XmlUtils.assertXmltreeEqualsFile(aseeker.get_globals(),
                                          os.path.join(self.data_path, "data/output/test.0.1.xml"))
         

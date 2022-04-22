@@ -6,6 +6,7 @@ Created on 11 Dec 2021
 import logging
 from pyvo.vomas.xml_interpreter.exceptions import MappingException
 from pyvo.vomas.xml_interpreter.vocabulary import Att, Ele
+from pyvo.vomas.utils.xml_utils import XmlUtils
 
 
 class AnnotationSeeker(object):
@@ -45,6 +46,8 @@ class AnnotationSeeker(object):
             if self._name_match(child.tag, Ele.GLOBALS) is True:
                 logging.info("Found GLOBALS")
                 self._globals_block = child
+                XmlUtils.pretty_print(self._globals_block)
+                break
 
         # get the TEMPLATES blocks
         for child in self._xml_block:

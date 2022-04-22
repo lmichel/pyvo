@@ -5,6 +5,8 @@ https://docs.astropy.org/en/latest/development/workflow/get_devel_version.html
 pip3 uninstall astropy
 git clone astropyfork
 cd astropy
+pip install cython
+
 python setup.py develop
 pip3 show astropy
 
