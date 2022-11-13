@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+  Example of an instrumental footprint mapped with the VODML mapping syntax.
+  No elaborated models here: we work with a mock model named "instfov"
+  We assume that an instrumental footprint has 2 components:
+  - one shape (Shape) giving the footprint shape
+  - one pointing (Pointing) giving the observation pointing.
+  
+  The shape does not depends on any particular pointing: it is defined as a GLOBALS
+  The pointings do depend on the table data: there are mapped in the TEMPLATES
+ -->
+<VOTABLE version="1.4"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.ivoa.net/xml/VOTable/v1.3"
+	xsi:schemaLocation="http://www.ivoa.net/xml/VOTable/v1.3 http://www.ivoa.net/xml/VOTable/v1.3">
+
+	<RESOURCE type="results">
+        <!--  Mapping resource -->
+		<RESOURCE type="meta">
+			<VODML
+				xmlns:dm-mapping="http://www.ivoa.net/xml/merged-syntax">
+				<REPORT status="OK">hand-made mapping: no
+					model so far
+				</REPORT>
+				
+                <!--  list of mapped models -->
+				<MODEL name="instfov"
+					url="https://www.ivoa.net/xml/instfov.xml" />
+
+               <!--  Mapping of quantities that do not depend on table rows -->
+				<GLOBALS>
+				    <!-- Mapping of the FoV shape (basically a shape + size) -->
+					<INSTANCE dmid="_square_shape"
+						dmtype="instfov:Shape">
+						<ATTRIBUTE
+							dmrole="instfov:Shape.shape" dmtype="ivoa:string" value="Square" />
+						<INSTANCE
+							dmrole="instfov:Shape.size" dmtype="instfov:Size">
+							<ATTRIBUTE
+								dmrole="instfov:Size.value" dmtype="ivoa:real" value="16.6)" />
+							<ATTRIBUTE
+								dmrole="instfov:Size.unit" dmtype="ivoa:string" value="arcmin" />
+						</INSTANCE>
+					</INSTANCE>
+				</GLOBALS>
+
+ 				<!--  mapping of the rows of the table "Results" -->
+				<TEMPLATES tableref="Results">
+				
+					<!-- on Fov per row, mixing both constant data and row data -->
+					<INSTANCE rdmref="_square_shape"
+						dmtype="instfov:FieldOfView">
+						
+						<!--  Reference to the shape as defined on GLOBALS -->
+						<REFERENCE
+							dmrole="instfov:FieldOfView.shape" />
+							
+						<!-- Mapping of the pointing contained in the table : one pointing direction + one roll angle-->
+						<INSTANCE
+							dmrole="instfov:FieldOfView.pointing" dmtype="instfov.Pointing">
+							<!--  Pointing direction -->
+							<INSTANCE
+								dmrole="instfov:Poinging.position" dmtype="instfov.Position">
+								<ATTRIBUTE
+									dmrole="instfov.Position.longitude" dmtype="ivoa:real"
+									ref="ra_pnt" />
+								<ATTRIBUTE
+									dmrole="instfov.Position.latitude" dmtype="ivoa:real"
+									ref="dec_pnt" />
+								<ATTRIBUTE
+									dmrole="instfov.Position.unit" dmtype="ivoa:Unit" value="deg" />
+							</INSTANCE>
+							
+							<!--  roll angle -->
+							<INSTANCE
+								dmrole="instfov:Poinging.rollangle" dmtype="instfov.RollAngle">
+								<ATTRIBUTE
+									dmrole="instfov.RollAngle.angle" dmtype="ivoa:real"
+									ref="roll_angle" />
+								<ATTRIBUTE
+									dmrole="instfov.RollAngle.unit" dmtype="ivoa:Unit"
+									value="arcmin" />
+							</INSTANCE>
+						</INSTANCE>
+					</INSTANCE>
+				</TEMPLATES>
+			</VODML>
+		</RESOURCE>
+		
+		<TABLE ID="Results">
+			<FIELD name="ra_pnt" ucd="pos.eq.ra" ref="J2000"
+				datatype="double" width="13" precision="9" unit="deg" />
+			<FIELD name="dec_pnt" ucd="pos.eq.dec" ref="J2000"
+				datatype="double" width="13" precision="9" unit="deg" />
+			<FIELD name="roll_angle" ucd="pos.posAng" datatype="double"
+				width="13" precision="9" unit="deg" />
+			<DATA>
+				<TABLEDATA>
+					<TR>
+						<TD>12.34</TD>
+						<TD>67.45</TD>
+						<TD>-45.5</TD>
+					</TR>
+					<TR>
+						<TD>122.34</TD>
+						<TD>-67.45</TD>
+						<TD>5.5</TD>
+					</TR>
+					<TR>
+						<TD>103.34</TD>
+						<TD>-7.45</TD>
+						<TD>8.5</TD>
+					</TR>
+					<TR>
+						<TD>1.234</TD>
+						<TD>6.45</TD>
+						<TD>0.5</TD>
+					</TR>
+				</TABLEDATA>
+			</DATA>
+		</TABLE>
+	</RESOURCE>
+</VOTABLE>
