@@ -1,0 +1,272 @@
+      <VODML xmlns="http://ivoa.net/xml/merged-synthax">
+        <REPORT status="OK">Automatically generated. NotSet instance have been removed</REPORT>
+        <MODEL name="ivoa" url="http://www.ivoa.net/xml/VODML/20180519/IVOA-v1.0.vo-dml.xml" />
+        <MODEL name="meas" url="https://github.com/ivoa-std/MeasurementDM/blob/master/vo-dml/Meas-v1.0.vo-dml.xml" />
+        <MODEL name="coords" url="https://github.com/ivoa-std/CoordinateDM/blob/master/vo-dml/Coords-v1.0.vo-dml.xml" />
+        <MODEL name="mango" url="https://github.com/ivoa-std/MANGO/blob/master/vo-dml/mango.vo-dml.xml" />
+        <!-- The GLOBALS block contains all objects with a scope covering all data. This is typically the case for the coordinate 
+          Systems -->
+        <GLOBALS>
+           <INSTANCE dmid="PhotCal_XMM_EB1" dmtype="coords:PhysicalCoordSys">
+            <INSTANCE dmtype="mango:PhotFrame" dmrole="coords:PhysicalCoordSys.frame">
+              <INSTANCE dmtype="photdm:PhotCal">
+                <ATTRIBUTE dmrole="photdm:PhotCal.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB1" />
+                <!-- Magnitude System -->
+                <INSTANCE dmrole="photdm:PhotCal.magnitudeSystem" dmtype="photdm:MagnitudeSystem">
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.type" dmtype="photdm:TypeOfMagSystem" value="XMM" />
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.referenceSpectrum" dmtype="ivoa:anyURI"
+                    value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                </INSTANCE>
+                <!-- Filter -->
+                <INSTANCE dmid="PhotFilter_XMM_EB1" dmrole="photdm:PhotCal.photometryFilter"
+                  dmtype="photdm:PhotometryFilter">
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB1" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.name" dmtype="ivoa:string" value="XMM EPIC EB1" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.description" dmtype="ivoa:string" value="Soft" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.bandname" dmtype="ivoa:string" value="EB1" />
+                  <!-- Spectral Location -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.spectralLocation" dmtype="photdm:SpectralLocation">
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.ucd" dmtype="ivoa:UCD" value="em.wl.effective" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.value" dmtype="ivoa:real" value="0.35" />
+                  </INSTANCE>
+                  <!-- Band width -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.bandwidth" dmtype="photdm:Bandwidth">
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.ucd" dmtype="ivoa:UCD" value="instr.bandwidth;stat.fwhm" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.extent" dmtype="ivoa:real" value="0.3" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.start" dmtype="ivoa:real" value="0.2" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.stop" dmtype="ivoa:real" value="0.5" />
+                  </INSTANCE>
+                  <!-- Transmission Curve -->
+                  <INSTANCE dmrole="photdm:Bandwidth.transmissionCurve" dmtype="photdm:TransmissionCurve">
+                    <INSTANCE dmrole="photdm:TransmissionCurve.access" dmtype="photdm:Access">
+                      <ATTRIBUTE dmrole="photdm:Access.reference" dmtype="ivoa:anyURI"
+                        value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                      <ATTRIBUTE dmrole="photdm:Access.format" dmtype="ivoa:string" value="text/html" />
+                    </INSTANCE>
+                  </INSTANCE>
+                </INSTANCE>
+              </INSTANCE>
+            </INSTANCE>
+          </INSTANCE>
+          <INSTANCE dmid="PhotCal_XMM_EB2" dmtype="coords:PhysicalCoordSys">
+            <INSTANCE dmtype="mango:PhotFrame" dmrole="coords:PhysicalCoordSys.frame">
+              <INSTANCE dmtype="photdm:PhotCal">
+                <ATTRIBUTE dmrole="photdm:PhotCal.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB2" />
+                <!-- Magnitude System -->
+                <INSTANCE dmrole="photdm:PhotCal.magnitudeSystem" dmtype="photdm:MagnitudeSystem">
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.type" dmtype="photdm:TypeOfMagSystem" value="XMM" />
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.referenceSpectrum" dmtype="ivoa:anyURI"
+                    value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                </INSTANCE>
+                <!-- Filter -->
+                <INSTANCE dmid="PhotFilter_XMM_EB2" dmrole="photdm:PhotCal.photometryFilter"
+                  dmtype="photdm:PhotometryFilter">
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB2" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.name" dmtype="ivoa:string" value="XMM EPIC EB2" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.description" dmtype="ivoa:string" value="Soft" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.bandname" dmtype="ivoa:string" value="EB2" />
+                  <!-- Spectral Location -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.spectralLocation" dmtype="photdm:SpectralLocation">
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.ucd" dmtype="ivoa:UCD" value="em.wl.effective" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.value" dmtype="ivoa:real" value="0.75" />
+                  </INSTANCE>
+                  <!-- Band width -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.bandwidth" dmtype="photdm:Bandwidth">
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.ucd" dmtype="ivoa:UCD" value="instr.bandwidth;stat.fwhm" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.extent" dmtype="ivoa:real" value="0.5" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.start" dmtype="ivoa:real" value="0.5" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.stop" dmtype="ivoa:real" value="1.0" />
+                  </INSTANCE>
+                  <!-- Transmission Curve -->
+                  <INSTANCE dmrole="photdm:Bandwidth.transmissionCurve" dmtype="photdm:TransmissionCurve">
+                    <INSTANCE dmrole="photdm:TransmissionCurve.access" dmtype="photdm:Access">
+                      <ATTRIBUTE dmrole="photdm:Access.reference" dmtype="ivoa:anyURI"
+                        value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                      <ATTRIBUTE dmrole="photdm:Access.format" dmtype="ivoa:string" value="text/html" />
+                    </INSTANCE>
+                  </INSTANCE>
+                </INSTANCE>
+              </INSTANCE>
+            </INSTANCE>
+          </INSTANCE>
+          <INSTANCE dmid="PhotCal_XMM_EB3" dmtype="coords:PhysicalCoordSys">
+            <INSTANCE dmtype="mango:PhotFrame" dmrole="coords:PhysicalCoordSys.frame">
+              <INSTANCE dmtype="photdm:PhotCal">
+                <ATTRIBUTE dmrole="photdm:PhotCal.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB3" />
+                <!-- Magnitude System -->
+                <INSTANCE dmrole="photdm:PhotCal.magnitudeSystem" dmtype="photdm:MagnitudeSystem">
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.type" dmtype="photdm:TypeOfMagSystem" value="XMM" />
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.referenceSpectrum" dmtype="ivoa:anyURI"
+                    value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                </INSTANCE>
+                <!-- Filter -->
+                <INSTANCE dmid="PhotFilter_XMM_EB3" dmrole="photdm:PhotCal.photometryFilter"
+                  dmtype="photdm:PhotometryFilter">
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB3" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.name" dmtype="ivoa:string" value="XMM EPIC EB3" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.description" dmtype="ivoa:string" value="Medium" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.bandname" dmtype="ivoa:string" value="EB3" />
+                  <!-- Spectral Location -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.spectralLocation" dmtype="photdm:SpectralLocation">
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.ucd" dmtype="ivoa:UCD" value="em.wl.effective" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.value" dmtype="ivoa:real" value="1.5" />
+                  </INSTANCE>
+                  <!-- Band width -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.bandwidth" dmtype="photdm:Bandwidth">
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.ucd" dmtype="ivoa:UCD" value="instr.bandwidth;stat.fwhm" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.extent" dmtype="ivoa:real" value="1.0" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.start" dmtype="ivoa:real" value="1.0" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.stop" dmtype="ivoa:real" value="2.0" />
+                  </INSTANCE>
+                  <!-- Transmission Curve -->
+                  <INSTANCE dmrole="photdm:Bandwidth.transmissionCurve" dmtype="photdm:TransmissionCurve">
+                    <INSTANCE dmrole="photdm:TransmissionCurve.access" dmtype="photdm:Access">
+                      <ATTRIBUTE dmrole="photdm:Access.reference" dmtype="ivoa:anyURI"
+                        value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                      <ATTRIBUTE dmrole="photdm:Access.format" dmtype="ivoa:string" value="text/html" />
+                    </INSTANCE>
+                  </INSTANCE>
+                </INSTANCE>
+              </INSTANCE>
+            </INSTANCE>
+          </INSTANCE>
+          <INSTANCE dmid="PhotCal_XMM_EB4" dmtype="coords:PhysicalCoordSys">
+            <INSTANCE dmtype="mango:PhotFrame" dmrole="coords:PhysicalCoordSys.frame">
+              <INSTANCE dmtype="photdm:PhotCal">
+                <ATTRIBUTE dmrole="photdm:PhotCal.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB4" />
+                <!-- Magnitude System -->
+                <INSTANCE dmrole="photdm:PhotCal.magnitudeSystem" dmtype="photdm:MagnitudeSystem">
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.type" dmtype="photdm:TypeOfMagSystem" value="XMM" />
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.referenceSpectrum" dmtype="ivoa:anyURI"
+                    value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                </INSTANCE>
+                <!-- Filter -->
+                <INSTANCE dmid="PhotFilter_XMM_EB4" dmrole="photdm:PhotCal.photometryFilter"
+                  dmtype="photdm:PhotometryFilter">
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB4" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.name" dmtype="ivoa:string" value="XMM EPIC EB4" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.description" dmtype="ivoa:string" value="Medium" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.bandname" dmtype="ivoa:string" value="EB4" />
+                  <!-- Spectral Location -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.spectralLocation" dmtype="photdm:SpectralLocation">
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.ucd" dmtype="ivoa:UCD" value="em.wl.effective" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.value" dmtype="ivoa:real" value="3.25" />
+                  </INSTANCE>
+                  <!-- Band width -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.bandwidth" dmtype="photdm:Bandwidth">
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.ucd" dmtype="ivoa:UCD" value="instr.bandwidth;stat.fwhm" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.extent" dmtype="ivoa:real" value="2.5" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.start" dmtype="ivoa:real" value="2.0" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.stop" dmtype="ivoa:real" value="4.5" />
+                  </INSTANCE>
+                  <!-- Transmission Curve -->
+                  <INSTANCE dmrole="photdm:Bandwidth.transmissionCurve" dmtype="photdm:TransmissionCurve">
+                    <INSTANCE dmrole="photdm:TransmissionCurve.access" dmtype="photdm:Access">
+                      <ATTRIBUTE dmrole="photdm:Access.reference" dmtype="ivoa:anyURI"
+                        value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                      <ATTRIBUTE dmrole="photdm:Access.format" dmtype="ivoa:string" value="text/html" />
+                    </INSTANCE>
+                  </INSTANCE>
+                </INSTANCE>
+              </INSTANCE>
+            </INSTANCE>
+          </INSTANCE>
+          <INSTANCE dmid="PhotCal_XMM_EB5" dmtype="coords:PhysicalCoordSys">
+            <INSTANCE dmtype="mango:PhotFrame" dmrole="coords:PhysicalCoordSys.frame">
+              <INSTANCE dmtype="photdm:PhotCal">
+                <ATTRIBUTE dmrole="photdm:PhotCal.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB5" />
+                <!-- Magnitude System -->
+                <INSTANCE dmrole="photdm:PhotCal.magnitudeSystem" dmtype="photdm:MagnitudeSystem">
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.type" dmtype="photdm:TypeOfMagSystem" value="XMM" />
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.referenceSpectrum" dmtype="ivoa:anyURI"
+                    value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                </INSTANCE>
+                <!-- Filter -->
+                <INSTANCE dmid="PhotFilter_XMM_EB5" dmrole="photdm:PhotCal.photometryFilter"
+                  dmtype="photdm:PhotometryFilter">
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB5" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.name" dmtype="ivoa:string" value="XMM EPIC EB5" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.description" dmtype="ivoa:string" value="Hard" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.bandname" dmtype="ivoa:string" value="EB5" />
+                  <!-- Spectral Location -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.spectralLocation" dmtype="photdm:SpectralLocation">
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.ucd" dmtype="ivoa:UCD" value="em.wl.effective" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.value" dmtype="ivoa:real" value="8.25" />
+                  </INSTANCE>
+                  <!-- Band width -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.bandwidth" dmtype="photdm:Bandwidth">
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.ucd" dmtype="ivoa:UCD" value="instr.bandwidth;stat.fwhm" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.extent" dmtype="ivoa:real" value="7.5" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.start" dmtype="ivoa:real" value="4.5" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.stop" dmtype="ivoa:real" value="12.0" />
+                  </INSTANCE>
+                  <!-- Transmission Curve -->
+                  <INSTANCE dmrole="photdm:Bandwidth.transmissionCurve" dmtype="photdm:TransmissionCurve">
+                    <INSTANCE dmrole="photdm:TransmissionCurve.access" dmtype="photdm:Access">
+                      <ATTRIBUTE dmrole="photdm:Access.reference" dmtype="ivoa:anyURI"
+                        value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                      <ATTRIBUTE dmrole="photdm:Access.format" dmtype="ivoa:string" value="text/html" />
+                    </INSTANCE>
+                  </INSTANCE>
+                </INSTANCE>
+              </INSTANCE>
+            </INSTANCE>
+          </INSTANCE>
+          <INSTANCE dmid="PhotCal_XMM_EB8" dmtype="coords:PhysicalCoordSys">
+            <INSTANCE dmtype="mango:PhotFrame" dmrole="coords:PhysicalCoordSys.frame">
+              <INSTANCE dmtype="photdm:PhotCal">
+                <ATTRIBUTE dmrole="photdm:PhotCal.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB8" />
+                <!-- Magnitude System -->
+                <INSTANCE dmrole="photdm:PhotCal.magnitudeSystem" dmtype="photdm:MagnitudeSystem">
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.type" dmtype="photdm:TypeOfMagSystem" value="XMM" />
+                  <ATTRIBUTE dmrole="photdm:MagnitudeSystem.referenceSpectrum" dmtype="ivoa:anyURI"
+                    value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                </INSTANCE>
+                <!-- Filter -->
+                <INSTANCE dmid="PhotFilter_XMM_EB8" dmrole="photdm:PhotCal.photometryFilter"
+                  dmtype="photdm:PhotometryFilter">
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.identifier" dmtype="ivoa:string" value="XMM/EPIC/EB8" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.name" dmtype="ivoa:string" value="XMM EPIC EB8" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.description" dmtype="ivoa:string" value="Broad" />
+                  <ATTRIBUTE dmrole="photdm:PhotometryFilter.bandname" dmtype="ivoa:string" value="EB8" />
+                  <!-- Spectral Location -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.spectralLocation" dmtype="photdm:SpectralLocation">
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.ucd" dmtype="ivoa:UCD" value="em.wl.effective" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:SpectralLocation.value" dmtype="ivoa:real" value="6.1" />
+                  </INSTANCE>
+                  <!-- Band width -->
+                  <INSTANCE dmrole="photdm:PhotometryFilter.bandwidth" dmtype="photdm:Bandwidth">
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.ucd" dmtype="ivoa:UCD" value="instr.bandwidth;stat.fwhm" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.unitexpression" dmtype="ivoa:Unit" value="keV" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.extent" dmtype="ivoa:real" value="11.8" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.start" dmtype="ivoa:real" value="0.2" />
+                    <ATTRIBUTE dmrole="photdm:Bandwidth.stop" dmtype="ivoa:real" value="12.0" />
+                  </INSTANCE>
+                  <!-- Transmission Curve -->
+                  <INSTANCE dmrole="photdm:Bandwidth.transmissionCurve" dmtype="photdm:TransmissionCurve">
+                    <INSTANCE dmrole="photdm:TransmissionCurve.access" dmtype="photdm:Access">
+                      <ATTRIBUTE dmrole="photdm:Access.reference" dmtype="ivoa:anyURI"
+                        value="https://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/sas_usg/USG/SASUSG.html" />
+                      <ATTRIBUTE dmrole="photdm:Access.format" dmtype="ivoa:string" value="text/html" />
+                    </INSTANCE>
+                  </INSTANCE>
+                </INSTANCE>
+              </INSTANCE>
+            </INSTANCE>
+          </INSTANCE>
+         </GLOBALS>
+        <!-- This block maps the data of the table identified as "Results" -->
+        <TEMPLATES tableref="result_S1655295746652">
+        </TEMPLATES>
+      </VODML>

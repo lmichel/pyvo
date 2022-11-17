@@ -55,20 +55,17 @@ import mplcursors
 import matplotlib.pyplot as plt 
 from astropy.io.votable import parse
 from astropy import units as u
-from mivot_code.class_wrappers.photdm.photcal import PhotCal
+from pyvo.mivot.class_wrappers.photdm.photcal import PhotCal
 
-from mivot_code.xml_interpreter.model_viewer import ModelViewer
+from pyvo.mivot.xml_interpreter.model_viewer import ModelViewer
 
 matplotlib.font_manager: logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 matplotlib.font_manager: logging.getLogger('matplotlib.ticker').setLevel(logging.WARNING)
 
 data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/")
 votable = parse(os.path.join(data_path, "NWAYAWGXMM.xml"))
-for resource in votable.resources:
-    mviewer = ModelViewer(resource, votable_path=os.path.join(data_path, "NWAYAWGXMM.xml"))
-    break;
+mviewer = ModelViewer(None, parsed_votable=votable)
 
-mviewer.connect_table(None)
 times = []
 ras = []
 decs = []
