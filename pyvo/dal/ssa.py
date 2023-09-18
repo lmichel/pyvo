@@ -50,7 +50,7 @@ __all__ = ["search", "SSAService", "SSAQuery", "SSAResults", "SSARecord"]
 
 
 def search(
-        baseurl, pos=None, diameter=None, band=None, time=None, format='all',
+        baseurl, pos=None, diameter=None, band=None, time=None, format=None,
         **keywords):
     """
     submit a simple SSA query that requests spectra overlapping a given region
@@ -110,7 +110,7 @@ class SSAService(DALService):
     a representation of an SSA service
     """
 
-    def __init__(self, baseurl):
+    def __init__(self, baseurl, session=None):
         """
         instantiate an SSA service
 
@@ -119,7 +119,7 @@ class SSAService(DALService):
         baseurl : str
            the base URL for submitting search queries to the service.
         """
-        super().__init__(baseurl)
+        super().__init__(baseurl, session=session)
 
     def _get_metadata(self):
         """
@@ -161,7 +161,7 @@ class SSAService(DALService):
             return []
 
     def search(
-            self, pos=None, diameter=None, band=None, time=None, format='all',
+            self, pos=None, diameter=None, band=None, time=None, format=None,
             **keywords):
         """
         submit a SSA query to this service with the given constraints.
@@ -346,19 +346,19 @@ class SSAQuery(DALQuery):
         """
         super().__init__(baseurl, session=session)
 
-        if pos:
+        if pos is not None:
             self.pos = pos
 
         if diameter is not None:
             self.diameter = diameter
 
-        if band:
+        if band is not None:
             self.band = band
 
-        if time:
+        if time is not None:
             self.time = time
 
-        if format:
+        if format is not None:
             self.format = format
 
         self.request = request
@@ -503,8 +503,15 @@ class SSAQuery(DALQuery):
             except TypeError:
                 raise valerr
 
+        # It seems astropy either has seconds and microseconds (the date_hms
+        # subformat) or no seconds at all (the date_hm subformat).  SSAP
+        # probably doesn't allow microseconds.  Rather than fix this
+        # via a new astropy subformat, let's get by with local string
+        # operations.
+        literals = time.to_value('isot')
         self["TIME"] = "{start}/{end}".format(
-            start=time.isot[0], end=time.isot[1])
+            start=literals[0].split(".")[0],
+            end=literals[1].split(".")[0])
 
     @time.deleter
     def time(self):
@@ -526,7 +533,7 @@ class SSAQuery(DALQuery):
     def format(self, val):
         setattr(self, "_format", val)
 
-        if type(val) in (str, bytes):
+        if isinstance(val, (str, bytes)):
             val = [val]
 
         self["FORMAT"] = ",".join(val)
@@ -582,10 +589,6 @@ class SSAResults(DatalinkResultsMixin, DALResults):
     :py:class:`~pyvo.dal.ssa.SSARecord` instances) are typically
     accessed by iterating over an ``SSAResults`` instance.
 
-    >>> results = pyvo.spectrumsearch(url, pos=[12.24, -13.1], diameter=0.2)
-    >>> for spec in results:
-    ...     print("{0}: {1}".format(spec.title, spec.getdataurl()))
-
     Alternatively, records can be accessed randomly via
     :py:meth:`getrecord` or through a Python Database API (v2)
     Cursor (via :py:meth:`~pyvo.dal.query.DALResults.cursor`).
@@ -604,7 +607,7 @@ class SSAResults(DatalinkResultsMixin, DALResults):
     as an Astropy :py:class:`~astropy.table.table.Table` via the
     following conversion:
 
-    >>> table = results.votable.to_table()
+    ``table = results.votable.to_table()``
 
     ``SSAResults`` supports the array item operator ``[...]`` in a
     read-only context.  When the argument is numerical, the result
@@ -743,7 +746,7 @@ class SSARecord(SodaRecordMixin, DatalinkRecordMixin, Record):
         ``make_dataset_filename()``.
         """
         out = self.title
-        if type(out) == bytes:
+        if isinstance(out, bytes):
             out = out.decode('utf-8')
 
         if not out:

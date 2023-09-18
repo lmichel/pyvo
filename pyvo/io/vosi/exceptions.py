@@ -188,8 +188,8 @@ class W15(VOSIWarning, XMLWarning):
     """
 
     message_template = (
-        'pyvo.dal is designed for VOSITables version 1.0, and 1.1, but ' +
-        'this file is {}')
+        'pyvo.dal is designed for VOSITables version 1.0, and 1.1, but '
+        + 'this file is {}')
     default_args = ('x',)
 
 
@@ -242,6 +242,8 @@ class W21(VOSIWarning, XMLWarning):
     """
     TAP Capabilties must have at least one outputFormat element.
     """
+    message_template = (
+        "TAP Capabilties must have at least one `outputFormat` element.")
 
 
 class W22(VOSIWarning, XMLWarning):

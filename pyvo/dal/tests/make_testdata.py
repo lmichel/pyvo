@@ -17,72 +17,83 @@ def _votablefile():
 
     table['2'].meta['utype'] = 'foobar'
 
-    votablefile = VOTableFile.from_table(table)
+    votable_file = VOTableFile.from_table(table)
 
     info = Info(name='QUERY_STATUS', value='OK')
     info.content = 'OK'
-    votablefile.resources[0].infos.append(info)
+    votable_file.resources[0].infos.append(info)
 
-    return votablefile
+    return votable_file
 
 
 def votablefile():
-    votablefile = _votablefile()
-    return votablefile
+    votable_file = _votablefile()
+    return votable_file
 
 
 def votablefile_errorstatus():
-    votablefile = _votablefile()
+    votable_file = _votablefile()
 
     info = Info(name='QUERY_STATUS', value='ERROR')
     info.content = 'ERROR'
-    votablefile.resources[0].infos[0] = info
+    votable_file.resources[0].infos[0] = info
 
-    return votablefile
+    return votable_file
+
+
+def votablefile_overflowstatus():
+    votable_file = _votablefile()
+
+    info_ok = Info(name='QUERY_STATUS', value='OK')
+    info_overflow = Info(name='QUERY_STATUS', value='OVERFLOW')
+    votable_file.resources[0].infos[0] = info_ok
+    votable_file.resources[0].infos.append(info_overflow)
+
+    return votable_file
 
 
 def votablefile_missingtable():
-    votablefile = _votablefile()
-    del votablefile.resources[0].tables[0]
-    return votablefile
+    votable_file = _votablefile()
+    del votable_file.resources[0].tables[0]
+    return votable_file
 
 
 def votablefile_missingresource():
-    votablefile = _votablefile()
-    del votablefile.resources[0]
-    return votablefile
+    votable_file = _votablefile()
+    del votable_file.resources[0]
+    return votable_file
 
 
 def votablefile_missingcolumns():
-    votablefile = _votablefile()
-    del votablefile.resources[0].tables[0].fields[:]
-    return votablefile
+    votable_file = _votablefile()
+    del votable_file.resources[0].tables[0].fields[:]
+    return votable_file
 
 
 def votablefile_firstresource():
-    votablefile = _votablefile()
-    votablefile.resources[0]._type = ''
-    return votablefile
+    votable_file = _votablefile()
+    votable_file.resources[0]._type = 'results'
+    return votable_file
 
 
 def votablefile_tableinfo():
-    votablefile = _votablefile()
-    votablefile.resources[0].tables[0].infos[:] = (
-        votablefile.resources[0].infos[:])
+    votable_file = _votablefile()
+    votable_file.resources[0].tables[0].infos[:] = (
+        votable_file.resources[0].infos[:])
 
-    del votablefile.resources[0].infos[:]
+    del votable_file.resources[0].infos[:]
 
-    return votablefile
+    return votable_file
 
 
 def votablefile_rootinfo():
-    votablefile = _votablefile()
-    votablefile.infos[:] = (
-        votablefile.resources[0].infos[:])
+    votable_file = _votablefile()
+    votable_file.infos[:] = (
+        votable_file.resources[0].infos[:])
 
-    del votablefile.resources[0].infos[:]
+    del votable_file.resources[0].infos[:]
 
-    return votablefile
+    return votable_file
 
 
 def votablefile_dataset():
@@ -103,13 +114,13 @@ def votablefile_dataset():
     table['dataurl'].meta['utype'] = 'Access.Reference'
     table['dataurl'].meta['ucd'] = 'meta.dataset;meta.ref.url'
 
-    votablefile = VOTableFile.from_table(table)
+    votable_file = VOTableFile.from_table(table)
 
     info = Info(name='QUERY_STATUS', value='OK')
     info.content = 'OK'
-    votablefile.resources[0].infos.append(info)
+    votable_file.resources[0].infos.append(info)
 
-    return votablefile
+    return votable_file
 
 
 def dataset_fits():
@@ -125,6 +136,9 @@ def main():
 
     votablefile_errorstatus().to_xml(
         str(dirname / 'query/errorstatus.xml'), tabledata_format='tabledata')
+
+    votablefile_overflowstatus().to_xml(
+        str(dirname / 'query/overflowstatus.xml'), tabledata_format='tabledata')
 
     votablefile_missingtable().to_xml(
         str(dirname / 'query/missingtable.xml'), tabledata_format='tabledata')

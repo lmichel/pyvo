@@ -5,10 +5,7 @@ Tests for pyvo.dal.query
 """
 from functools import partial
 
-try:
-    from contextlib import ExitStack
-except ImportError:
-    from contextlib2 import ExitStack
+from contextlib import ExitStack
 
 from os import listdir
 
@@ -16,12 +13,13 @@ import pytest
 
 import numpy as np
 
-from pyvo.dal.query import DALService, DALQuery, DALResults, Record
-from pyvo.dal.exceptions import DALServiceError, DALQueryError, DALFormatError
-from pyvo.version import version
-from pyvo.utils.compat import ASTROPY_LT_4_1
+import platform
 
-from astropy.table import Table
+from pyvo.dal.query import DALService, DALQuery, DALResults, Record
+from pyvo.dal.exceptions import DALServiceError, DALQueryError, DALFormatError, DALOverflowWarning
+from pyvo.version import version
+
+from astropy.table import Table, QTable
 from astropy.io.votable.tree import VOTableFile, Table as VOTable
 from astropy.io.fits import HDUList
 
@@ -91,6 +89,10 @@ def register_mocks(mocker):
                 'GET', 'http://example.com/query/errorstatus',
                 content=get_pkg_data_contents('data/query/errorstatus.xml')
             )),
+            stack.enter_context(mocker.register_uri(
+                'GET', 'http://example.com/query/overflowstatus',
+                content=get_pkg_data_contents('data/query/overflowstatus.xml')
+            )),
         ]
 
         def verbosetest_callback(request, context):
@@ -104,8 +106,8 @@ def register_mocks(mocker):
 
         def useragent_callback(request, context):
             assert 'User-Agent' in request.headers
-            assert request.headers['User-Agent'] == 'python-pyvo/{}'.format(
-                version)
+            assert request.headers['User-Agent'] == 'pyVO/{} Python/{} ({})'.format(
+                version, platform.python_version(), platform.system())
             return get_pkg_data_contents('data/query/basic.xml')
 
         matchers.append(stack.enter_context(mocker.register_uri(
@@ -124,12 +126,11 @@ def _test_results(results):
     assert results['1', 1] == 42
     assert results['1', 2] == 1337
 
-    truth = b'Illuminatus' if ASTROPY_LT_4_1 else 'Illuminatus'
+    truth = 'Illuminatus'
     assert results['2', 0] == truth
-    truth = b"Don't panic, and always carry a towel" \
-        if ASTROPY_LT_4_1 else "Don't panic, and always carry a towel"
+    truth = "Don't panic, and always carry a towel"
     assert results['2', 1] == truth
-    truth = b'Elite' if ASTROPY_LT_4_1 else 'Elite'
+    truth = 'Elite'
     assert results['2', 2] == truth
 
 
@@ -141,16 +142,15 @@ def _test_records(records):
 
     assert records[0]['1'] == 23
 
-    truth = b'Illuminatus' if ASTROPY_LT_4_1 else 'Illuminatus'
+    truth = 'Illuminatus'
     assert records[0]['2'] == truth
 
     assert records[1]['1'] == 42
-    truth = b"Don't panic, and always carry a towel" \
-        if ASTROPY_LT_4_1 else "Don't panic, and always carry a towel"
+    truth = "Don't panic, and always carry a towel"
     assert records[1]['2'] == truth
 
     assert records[2]['1'] == 1337
-    truth = b'Elite' if ASTROPY_LT_4_1 else 'Elite'
+    truth = 'Elite'
     assert records[2]['2'] == truth
 
 
@@ -201,6 +201,12 @@ class TestDALService:
         service = DALService('http://example.com/query/errorstatus')
 
         with pytest.raises(DALQueryError):
+            service.search()
+
+    def test_query_warning(self):
+        service = DALService('http://example.com/query/overflowstatus')
+
+        with pytest.warns(DALOverflowWarning):
             service.search()
 
     @pytest.mark.filterwarnings("ignore::astropy.io.votable.exceptions.W53")
@@ -283,6 +289,10 @@ class TestDALResults:
         with pytest.raises(DALQueryError):
             DALResults.from_result_url('http://example.com/query/errorstatus')
 
+    def test_init_overflowstatus(self):
+        with pytest.warns(DALOverflowWarning):
+            DALResults.from_result_url('http://example.com/query/overflowstatus')
+
     def test_init_missingtable(self):
         with pytest.raises(DALFormatError):
             DALResults.from_result_url('http://example.com/query/missingtable')
@@ -293,7 +303,6 @@ class TestDALResults:
             DALResults.from_result_url(
                 'http://example.com/query/missingresource')
 
-    @pytest.mark.xfail()
     def test_init_missingcolumns(self):
         with pytest.raises(DALFormatError):
             DALResults.from_result_url(
@@ -314,12 +323,11 @@ class TestDALResults:
             'http://example.com/query/rootinfo')
         assert dalresults.status == ('OK', 'OK')
 
-    @pytest.mark.xfail(reason="ID lookup does not work")
     def test_repr(self):
         dalresults = DALResults.from_result_url(
             'http://example.com/query/basic')
 
-        assert repr(dalresults) == repr(dalresults.to_table())
+        assert repr(dalresults)[0:26] == "<DALResultsTable length=3>"
 
     def test_iter(self):
         dalresults = DALResults.from_result_url(
@@ -340,13 +348,14 @@ class TestDALResults:
         _test_results(dalresults)
         _test_records(dalresults)
 
-    @pytest.mark.xfail(reason="ID lookup does not work")
     def test_table_conversion(self):
         dalresults = DALResults.from_result_url(
             'http://example.com/query/basic')
 
         assert isinstance(dalresults.to_table(), Table)
+        assert isinstance(dalresults.to_qtable(), QTable)
         assert len(dalresults) == len(dalresults.to_table())
+        assert len(dalresults) == len(dalresults.to_qtable())
 
     def test_id_over_name(self):
         dalresults = DALResults.from_result_url(
@@ -393,7 +402,7 @@ class TestRecord:
             'http://example.com/query/basic')[0]
 
         assert record['1'] == 23
-        truth = b'Illuminatus' if ASTROPY_LT_4_1 else 'Illuminatus'
+        truth = 'Illuminatus'
         assert record['2'] == truth
 
         assert record['_1'] == 23
@@ -424,7 +433,7 @@ class TestRecord:
     def test_repr(self):
         record = DALResults.from_result_url(
             'http://example.com/query/basic')[0]
-        truth = b'Illuminatus' if ASTROPY_LT_4_1 else 'Illuminatus'
+        truth = 'Illuminatus'
         assert repr(record) == repr((23, truth))
 
     def test_get(self):
@@ -440,7 +449,7 @@ class TestRecord:
         assert record.getbyucd('foo') == 23
         assert record.getbyucd('bar') == 23
 
-        truth = b'Illuminatus' if ASTROPY_LT_4_1 else 'Illuminatus'
+        truth = 'Illuminatus'
         assert record.getbyutype('foobar') == truth
 
         record.getbyucd('baz') is None

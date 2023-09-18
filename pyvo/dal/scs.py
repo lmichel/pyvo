@@ -413,22 +413,18 @@ class SCSQuery(DALQuery):
         return SCSResults(self.execute_votable(), url=self.queryurl, session=self._session)
 
 
-class SCSResults(DALResults, DatalinkResultsMixin):
+class SCSResults(DatalinkResultsMixin, DALResults):
     """
     The list of matching catalog records resulting from a catalog (SCS) query.
     Each record contains a set of metadata that describes a source or
     observation within the requested circular region (i.e. a "cone").  The
-    number of records in the results is available via the :py:attr:`nrecs
-    attribute or by passing it to the Python built-in ``len()`` function.
+    number of records in the results is available by passing it to the Python built-in
+    ``len()`` function.
 
     This class supports iterable semantics; thus,
     individual records (in the form of
     :py:class:`~pyvo.dal.scs.SCSRecord` instances) are typically
     accessed by iterating over an ``SCSResults`` instance.
-
-    >>> results = pyvo.conesearch(url, pos=[12.24, -13.1], radius=0.1)
-    >>> for src in results:
-    ...     print("{0}: {1} {2}".format(src.id, src.ra, src.dec))
 
     Alternatively, records can be accessed randomly via
     :py:meth:`getrecord` or through a Python Database API (v2)
@@ -448,7 +444,7 @@ class SCSResults(DALResults, DatalinkResultsMixin):
     as an Astropy :py:class:`~astropy.table.table.Table` via the
     following conversion:
 
-    >>> table = results.votable.to_table()
+    ``table = results.votable.to_table()``
 
     ``SCSResults`` supports the array item operator ``[...]`` in a
     read-only context.  When the argument is numerical, the result

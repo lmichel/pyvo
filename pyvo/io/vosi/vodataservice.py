@@ -16,13 +16,14 @@ defining a `value` property.
 
 import re
 
+from astropy.utils import deprecated
 from astropy.utils.collections import HomogeneousList
 from astropy.utils.misc import indent
 from astropy.utils.xml import check as xml_check
 from astropy.io.votable.exceptions import vo_raise, vo_warn, warn_or_raise
 
 from ...utils.xml.elements import (
-    xmlattribute, xmlelement, Element, ContentMixin)
+    xmlattribute, xmlelement, Element, ElementWithXSIType, ContentMixin)
 
 from . import voresource as vr
 from .exceptions import (
@@ -31,7 +32,7 @@ from .exceptions import (
     E01, E02, E03, E04, E05, E06)
 
 __all__ = [
-    "TableSet", "TableSchema", "ParamHTTP", "Table", "BaseParam", "TableParam",
+    "TableSet", "TableSchema", "ParamHTTP", "VODataServiceTable", "BaseParam", "TableParam",
     "InputParam", "DataType", "SimpleDataType", "TableDataType", "VOTableType",
     "TAPDataType", "TAPType", "FKColumn", "ForeignKey"]
 
@@ -80,6 +81,7 @@ class TableSet(Element, HomogeneousList):
 
     The set of tables hosted by a resource.
     """
+
     def __init__(
         self, config=None, pos=None, _name='tableset', version='1.1', **kwargs
     ):
@@ -140,8 +142,9 @@ class TableSchema(Element, HomogeneousList):
 
     A detailed description of a logically-related set of tables.
     """
+
     def __init__(self, config=None, pos=None, _name='schema', **kwargs):
-        HomogeneousList.__init__(self, Table)
+        HomogeneousList.__init__(self, VODataServiceTable)
         Element.__init__(self, config, pos, _name, **kwargs)
 
         self._name = None
@@ -228,7 +231,7 @@ class TableSchema(Element, HomogeneousList):
 
     @tables.adder
     def tables(self, iterator, tag, data, config, pos):
-        table = Table(config, pos, 'table', **data)
+        table = VODataServiceTable(config, pos, 'table', **data)
         table.parse(iterator, config)
         self.append(table)
 
@@ -251,9 +254,10 @@ class ParamHTTP(vr.Interface):
     Note that the URL for help with this service can be put into
     the Service/ReferenceURL element.
     """
+
     def __init__(self, config=None, pos=None, _name='', **kwargs):
         super().__init__(
-                config=config, pos=pos, _name=_name, **kwargs)
+            config=config, pos=pos, _name=_name, **kwargs)
 
         self._querytypes = HomogeneousList(str)
         self._resulttype = None
@@ -285,11 +289,12 @@ class ParamHTTP(vr.Interface):
             warn_or_raise(W18, W18, config=config, pos=self._pos)
 
 
-class Table(Element):
+class VODataServiceTable(Element):
     """
     Table element as described in
     http://www.ivoa.net/xml/VODataService/v1.1
     """
+
     def __init__(
         self, config=None, pos=None, _name='table', version='1.1', **kwargs
     ):
@@ -306,7 +311,7 @@ class Table(Element):
         self._foreignkeys = HomogeneousList(ForeignKey)
 
     def __repr__(self):
-        return '<Table name="{}">... {} columns ...</Table>'.format(
+        return '<VODataServiceTable name="{}">... {} columns ...</VODataServiceTable>'.format(
             self.name, len(self.columns))
 
     def describe(self):
@@ -445,6 +450,11 @@ class Table(Element):
             vo_raise(E06, self._Element__name, config=config, pos=self._pos)
 
 
+@deprecated("1.5", alternative="VODataServiceTable")
+class Table(VODataServiceTable):
+    pass
+
+
 class BaseParam(Element):
     """
     BaseParam element as described in
@@ -455,9 +465,10 @@ class BaseParam(Element):
     normally employ a sub-class of this type (e.g. Param), rather than this
     type directly.
     """
+
     def __init__(self, config=None, pos=None, _name='', **kwargs):
         super().__init__(
-                config=config, pos=pos, _name=_name, **kwargs)
+            config=config, pos=pos, _name=_name, **kwargs)
 
         self._name = None
         self._description = None
@@ -561,7 +572,7 @@ class TableParam(BaseParam):
 
     def __init__(self, config=None, pos=None, _name='', std=None, **kwargs):
         super().__init__(
-                config=config, pos=pos, _name=_name, **kwargs)
+            config=config, pos=pos, _name=_name, **kwargs)
 
         self._datatype = None
         self._flags = HomogeneousList(str)
@@ -627,6 +638,7 @@ class InputParam(BaseParam):
 
     A description of a service or function parameter having a fixed data type.
     """
+
     def __init__(
             self, config=None, pos=None, _name='', use="optional", std="1",
             **kwargs):
@@ -682,7 +694,7 @@ class InputParam(BaseParam):
             vo_raise(E06, self._Element__name, config=config, pos=self._pos)
 
 
-class DataType(ContentMixin, Element):
+class DataType(ContentMixin, ElementWithXSIType):
     """
     DataType element as described in
     http://www.ivoa.net/xml/VODataService/v1.1
@@ -693,6 +705,7 @@ class DataType(ContentMixin, Element):
     This XML type is used as a parent for defining data types with a restricted
     set of names.
     """
+
     def __init__(
             self, config=None, pos=None, _name='dataType',
             arraysize=None, delim=None, extendedType=None, extendedSchema=None,
@@ -799,6 +812,7 @@ class SimpleDataType(DataType):
     This set is intended for describing simple input parameters to a service or
     function.
     """
+
     def _content_check(self, value):
         if value is not None:
             valid_values = {
@@ -817,27 +831,6 @@ class TableDataType(DataType):
 
     Subtypes must be decorated with ``register_xsi_type('ns:name')``.
     """
-    _xsi_type_mapping = {}
-
-    @classmethod
-    def register_xsi_type(cls, typename):
-        """Decorator factory for registering subtypes"""
-        def register(class_):
-            """Decorator for registering subtypes"""
-            cls._xsi_type_mapping[typename] = class_
-            return class_
-        return register
-
-    def __new__(cls, *args, **kwargs):
-        if 'xsi:type' not in kwargs:
-            pass
-
-        xsi_type = kwargs.get('xsi:type')
-        dtype = cls._xsi_type_mapping.get(xsi_type, cls)
-
-        obj = DataType.__new__(dtype)
-        obj.__init__(*args, **kwargs)
-        return obj
 
 
 @TableDataType.register_xsi_type('vs:VOTable')
@@ -847,6 +840,7 @@ class VOTableType(TableDataType):
     VOTableType element as described in
     http://www.ivoa.net/xml/VODataService/v1.1
     """
+
     def _content_check(self, value):
         if value is not None:
             valid_values = (
@@ -865,6 +859,7 @@ class TAPDataType(TableDataType):
     an abstract parent for the specific data types supported by the
     Table Access Protocol.
     """
+
     def __init__(
         self, config=None, pos=None, _name='dataType', size=None, **kwargs
     ):
@@ -901,6 +896,7 @@ class TAPType(TAPDataType):
 
     a data type supported explicitly by the Table Access Protocol (v1.0).
     """
+
     def _content_check(self, value):
         if value is not None:
             valid_values = (
@@ -916,9 +912,10 @@ class FKColumn(Element):
     FKColumn element as described in
     http://www.ivoa.net/xml/VODataService/v1.1
     """
+
     def __init__(self, config=None, pos=None, _name='fkColumn', **kwargs):
         super().__init__(
-                config=config, pos=pos, _name=_name, **kwargs)
+            config=config, pos=pos, _name=_name, **kwargs)
 
         self._fromcolumn = None
         self._targetcolumn = None
@@ -963,6 +960,7 @@ class ForeignKey(Element):
     ForeignKey element as described in
     http://www.ivoa.net/xml/VODataService/v1.1
     """
+
     def __init__(self, config=None, pos=None, _name='foreignKey', **kwargs):
         Element.__init__(self, config, pos, _name, **kwargs)
 

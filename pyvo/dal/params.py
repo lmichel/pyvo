@@ -7,6 +7,7 @@ from collections.abc import MutableSet
 import abc
 
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
 from astropy.time import Time
 from astropy.io.votable.converters import (
@@ -49,6 +50,7 @@ def unify_value(func):
     Decorator for serialize method to do unit conversion on input value.
     The decorator converts the input value to the unit in the input param.
     """
+
     def wrapper(self, value):
         if self._param.unit:
             value = Quantity(value)
@@ -80,6 +82,7 @@ class Converter:
     Base class for all converters. Each subclass handles the conversion of a
     input value based on a specific xtype.
     """
+
     def __init__(self, param):
         self._param = param
 
@@ -222,7 +225,7 @@ class AbstractDalQueryParam(MutableSet, metaclass=abc.ABCMeta):
     behaves like a set that stores all the values.
 
     When a value is added to an attribute, it is validated and formatted
-    to conform to the using service (SIAv2 or SODA) and value errors might be
+    to conform to the using service (SIA2 or SODA) and value errors might be
     raised. The `dal` attribute stores the current list of formatted
     attributes.
 
@@ -231,6 +234,7 @@ class AbstractDalQueryParam(MutableSet, metaclass=abc.ABCMeta):
     Duplicates in the set are determine based on the formatted DAL
     representation of the value.
     """
+
     def __init__(self, values=()):
         """
         Parameters
@@ -281,6 +285,7 @@ class StrQueryParam(AbstractDalQueryParam):
     Representation of a unitless, single-value parameter. The formatter is
     just a str() cast
     """
+
     def get_dal_format(self, val):
         return str(val)
 
@@ -290,13 +295,14 @@ class PosQueryParam(AbstractDalQueryParam):
     Representation of a position parameter. Depending on the number
     of entries, the resulting DAL format is CIRCLE, RANGE or POLYGON.
     """
+
     def get_dal_format(self, val):
         """
         formats the tuple values into a string to be sent to the service
         entries in values are either quantities or assumed to be degrees
         """
         self._validate_pos(val)
-        if len(val) == 3:
+        if len(val) == 2 or len(val) == 3:
             shape = 'CIRCLE'
         elif len(val) == 4:
             shape = 'RANGE'
@@ -308,7 +314,8 @@ class PosQueryParam(AbstractDalQueryParam):
                 'even 6 and above (POLYGON) accepted.'.format(val))
         return '{} {}'.format(shape, ' '.join(
             [str(val.to(u.deg).value) if isinstance(val, Quantity) else
-             str((val*u.deg).value) for val in val]))
+             val.transform_to('icrs').to_string() if isinstance(val, SkyCoord) else
+             str((val * u.deg).value) for val in val]))
 
     def _validate_pos(self, pos):
         """
@@ -316,14 +323,24 @@ class PosQueryParam(AbstractDalQueryParam):
 
         This has probably done already somewhere else
         """
-        if len(pos) == 3:
+
+        if len(pos) == 2:
+            if not isinstance(pos[0], SkyCoord):
+                raise ValueError
+            if not isinstance(pos[1], Quantity):
+                radius = pos[1] * u.deg
+            else:
+                radius = pos[1]
+            if radius <= 0 * u.deg or radius.to(u.deg) > 90 * u.deg:
+                raise ValueError('Invalid circle radius: {}'.format(radius))
+        elif len(pos) == 3:
             self._validate_ra(pos[0])
             self._validate_dec(pos[1])
             if not isinstance(pos[2], Quantity):
                 radius = pos[2] * u.deg
             else:
                 radius = pos[2]
-            if radius <= 0*u.deg or radius.to(u.deg) > 90*u.deg:
+            if radius <= 0 * u.deg or radius.to(u.deg) > 90 * u.deg:
                 raise ValueError('Invalid circle radius: {}'.format(radius))
         elif len(pos) == 4:
             ra_min = pos[0] if isinstance(pos[0], Quantity) else pos[0] * u.deg
@@ -366,6 +383,7 @@ class IntervalQueryParam(AbstractDalQueryParam):
     """
     Representation of an interval DAL parameter.
     """
+
     def __init__(self, unit=None, equivalencies=None):
         """
         Parameters
@@ -397,10 +415,10 @@ class IntervalQueryParam(AbstractDalQueryParam):
                 low, high))
         if self._unit:
             if not isinstance(low, Quantity):
-                low = low*self._unit
+                low = low * self._unit
             low = low.to(self._unit, equivalencies=self._equivalencies).value
             if not isinstance(high, Quantity):
-                high = high*self._unit
+                high = high * self._unit
             high = high.to(self._unit, equivalencies=self._equivalencies).value
 
             if low > high:
@@ -414,6 +432,7 @@ class TimeQueryParam(AbstractDalQueryParam):
     """
     Representation of a timestamp parameter.
     """
+
     def get_dal_format(self, val):
         if isinstance(val, tuple):
             if len(val) == 1:
@@ -442,6 +461,7 @@ class EnumQueryParam(AbstractDalQueryParam):
     """
     Representation of an enum parameter
     """
+
     def __init__(self, allowed_values):
         """
         Parameters

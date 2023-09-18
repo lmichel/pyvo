@@ -46,7 +46,7 @@ __all__ = ["search", "SIAService", "SIAQuery", "SIAResults", "SIARecord"]
 
 
 def search(
-        url, pos, size=1.0, format='all', intersect="overlaps", verbosity=2,
+        url, pos, size=1.0, format=None, intersect=None, verbosity=2,
         **keywords):
     """
     submit a simple SIA query that requests images overlapping a given region
@@ -64,7 +64,7 @@ def search(
         converted if it's a iterable containing scalars,
         assuming decimal degrees.
     format : str
-        the image format(s) of interest.  "all" (default)
+        the image format(s) of interest.  "all" (server-side default)
         indicates all available formats; "graphic" indicates
         graphical images (e.g. jpeg, png, gif; not FITS);
         "metadata" indicates that no images should be
@@ -78,7 +78,7 @@ def search(
         ========= ======================================================
         COVERS    select images that completely cover the search region
         ENCLOSED  select images that are complete enclosed by the region
-        OVERLAPS  select any image that overlaps with the search region
+        OVERLAPS  select any image that overlaps the search region (server-side default)
         CENTER    select images whose center is within the search region
         ========= ======================================================
 
@@ -86,6 +86,7 @@ def search(
         an integer value that indicates the volume of columns
         to return in the result table.  0 means the minimum
         set of columsn, 3 means as many columns as are  available.
+        (client-side default == 2)
     **keywords :
         additional parameters can be given via arbitrary
         case insensitive keyword arguments. Where there is overlap
@@ -186,7 +187,7 @@ class SIAService(DALService):
             return []
 
     def search(
-            self, pos, size=1.0, format='all', intersect="overlaps",
+            self, pos, size=1.0, format=None, intersect=None,
             verbosity=2, **keywords):
         """
         submit a SIA query to this service with the given parameters.
@@ -205,7 +206,7 @@ class SIAService(DALService):
             the size of the rectangular region around pos.
             assuming icrs decimal degrees if unit is not specified.
         format : str
-            the image format(s) of interest.  "all" (default)
+            the image format(s) of interest.  "all" (server-side default)
             indicates all available formats; "graphic" indicates
             graphical images (e.g. jpeg, png, gif; not FITS);
             "metadata" indicates that no images should be
@@ -219,7 +220,7 @@ class SIAService(DALService):
             ========= ======================================================
             COVERS    select images that completely cover the search region
             ENCLOSED  select images that are complete enclosed by the region
-            OVERLAPS  select any image that overlaps with the search region
+            OVERLAPS  select any image that overlaps the search region (server-side default)
             CENTER    select images whose center is within the search region
             ========= ======================================================
 
@@ -227,6 +228,7 @@ class SIAService(DALService):
             an integer value that indicates the volume of columns
             to return in the result table.  0 means the minimum
             set of columns, 3 means as many columns as are  available.
+            (client-side default == 2)
         **keywords :
             additional parameters can be given via arbitrary
             case insensitive keyword arguments. Where there is overlap
@@ -277,7 +279,7 @@ class SIAService(DALService):
             the size of the rectangular region around pos.
             assuming icrs decimal degrees if unit is not specified.
         format : str
-            the image format(s) of interest.  "all" (default)
+            the image format(s) of interest.  "all" (server-side default)
             indicates all available formats; "graphic" indicates
             graphical images (e.g. jpeg, png, gif; not FITS);
             "metadata" indicates that no images should be
@@ -291,7 +293,7 @@ class SIAService(DALService):
             ========= ======================================================
             COVERS    select images that completely cover the search region
             ENCLOSED  select images that are complete enclosed by the region
-            OVERLAPS  select any image that overlaps with the search region
+            OVERLAPS  select any image that overlaps the search region (server-side default)
             CENTER    select images whose center is within the search region
             ========= ======================================================
 
@@ -364,7 +366,7 @@ class SIAQuery(DALQuery):
             the size of the rectangular region around pos.
             assuming icrs decimal degrees if unit is not specified.
         format : str
-            the image format(s) of interest.  "all" (default)
+            the image format(s) of interest.  "all" (server-side default)
             indicates all available formats; "graphic" indicates
             graphical images (e.g. jpeg, png, gif; not FITS);
             "metadata" indicates that no images should be
@@ -378,7 +380,7 @@ class SIAQuery(DALQuery):
             ========= ======================================================
             COVERS    select images that completely cover the search region
             ENCLOSED  select images that are complete enclosed by the region
-            OVERLAPS  select any image that overlaps with the search region
+            OVERLAPS  select any image that overlaps the search region (server-side default)
             CENTER    select images whose center is within the search region
             ========= ======================================================
 
@@ -396,19 +398,19 @@ class SIAQuery(DALQuery):
         """
         super().__init__(baseurl, session=session, **keywords)
 
-        if pos:
+        if pos is not None:
             self.pos = pos
 
         if size is not None:
             self.size = size
 
-        if format:
+        if format is not None:
             self.format = format
 
-        if intersect:
+        if intersect is not None:
             self.intersect = intersect
 
-        if verbosity:
+        if verbosity is not None:
             self.verbosity = verbosity
 
     @property
@@ -501,7 +503,7 @@ class SIAQuery(DALQuery):
     def format(self, format_):
         setattr(self, "_format", format_)
 
-        if type(format_) in (str, bytes):
+        if isinstance(format_, (str, bytes)):
             format_ = [format_]
 
         self["FORMAT"] = ",".join(_.upper() for _ in format_)
@@ -577,17 +579,12 @@ class SIAResults(DatalinkResultsMixin, DALResults):
     The list of matching images resulting from an image (SIA) query.
     Each record contains a set of metadata that describes an available
     image matching the query constraints.  The number of records in
-    the results is available via the :py:attr:`nrecs` attribute or by
-    passing it to the Python built-in ``len()`` function.
+    the results is available by passing it to the Python built-in ``len()`` function.
 
     This class supports iterable semantics; thus,
     individual records (in the form of
     :py:class:`~pyvo.dal.sia.SIARecord` instances) are typically
     accessed by iterating over an ``SIAResults`` instance.
-
-    >>> results = pyvo.imagesearch(url, pos=[12.24, -13.1], size=0.1)
-    >>> for image in results:
-    ...     print("{0}: {1}".format(image.title, title.getdataurl()))
 
     Alternatively, records can be accessed randomly via
     :py:meth:`getrecord` or through a Python Database API (v2)
@@ -607,7 +604,7 @@ class SIAResults(DatalinkResultsMixin, DALResults):
     as an Astropy :py:class:`~astropy.table.table.Table` via the
     following conversion:
 
-    >>> table = results.votable.to_table()
+    ``table = results.votable.to_table()``
 
     ``SIAResults`` supports the array item operator ``[...]`` in a
     read-only context.  When the argument is numerical, the result
@@ -881,11 +878,10 @@ class SIARecord(SodaRecordMixin, DatalinkRecordMixin, Record):
         to retrieve the dataset described by this record.  None is returned
         if no such column exists.
         """
-        dataurl = super().getdataurl()
-        if dataurl is None:
+        if self.acref is not None:
             return self.acref
         else:
-            return dataurl
+            return super().getdataurl()
 
     def suggest_dataset_basename(self):
         """
@@ -896,7 +892,7 @@ class SIARecord(SodaRecordMixin, DatalinkRecordMixin, Record):
         ``make_dataset_filename()``.
         """
         out = self.title
-        if type(out) == bytes:
+        if isinstance(out, bytes):
             out = out.decode('utf-8')
 
         if not out:

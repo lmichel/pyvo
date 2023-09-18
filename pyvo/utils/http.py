@@ -2,10 +2,11 @@
 """
 HTTP utils
 """
+import platform
 import requests
 from ..version import version
 
-DEFAULT_USER_AGENT = 'python-pyvo/{}'.format(version)
+DEFAULT_USER_AGENT = f'pyVO/{version} Python/{platform.python_version()} ({platform.system()})'
 
 
 def use_session(session):

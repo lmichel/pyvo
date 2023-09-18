@@ -6,10 +6,7 @@ import contextlib
 import os
 import tempfile
 
-try:
-    from astropy.samp import SAMPIntegratedClient
-except ImportError:
-    from astropy.vo.samp import SAMPIntegratedClient
+from astropy.samp import SAMPIntegratedClient
 
 
 __all__ = [
@@ -36,8 +33,8 @@ def send_table_to(conn, table, client_name=None, name="data"):
         message = {
             "samp.mtype": "table.load.votable",
             "samp.params": {
-               "url": url,
-               "name": name,
+                "url": url,
+                "name": name,
             },
         }
         if client_name is None:
@@ -87,7 +84,7 @@ def send_image_to(conn, url, client_name=None, name="data"):
     asks an image client to open a remote image via SAMP.
     """
     send_product_to(
-        conn,  url, "image.load.fits",
+        conn, url, "image.load.fits",
         client_name=client_name, name=name)
 
 

@@ -26,21 +26,20 @@ import os
 import shutil
 import re
 import requests
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+from collections.abc import Mapping
+
 import collections
 
 from warnings import warn
 
-from astropy.table import Table
+from astropy.table import Table, QTable
 from astropy.io.votable import parse as votableparse
 from astropy.io.votable.ucd import parse_ucd
 from astropy.utils.exceptions import AstropyDeprecationWarning
 
 from .mimetype import mime_object_maker
-from .exceptions import (DALFormatError, DALServiceError, DALQueryError)
+from .exceptions import (DALFormatError, DALServiceError, DALQueryError,
+                         DALOverflowWarning)
 
 from .. import samp
 
@@ -112,6 +111,9 @@ class DALService:
         return q
 
     def describe(self):
+        """
+        describe the general information about the DAL service
+        """
         print('DAL Service at {}'.format(self.baseurl))
 
 
@@ -133,7 +135,7 @@ class DALQuery(dict):
         """
         initialize the query object with a baseurl
         """
-        if type(baseurl) == bytes:
+        if isinstance(baseurl, bytes):
             baseurl = baseurl.decode("utf-8")
 
         self._baseurl = baseurl.rstrip("?")
@@ -319,6 +321,10 @@ class DALResults:
         if self._status[0].lower() not in ("ok", "overflow"):
             raise DALQueryError(self._status[1], self._status[0], url)
 
+        if self._status[0].lower() == "overflow":
+            warn("Partial result set. Potential causes MAXREC, async storage space, etc.",
+                 category=DALOverflowWarning)
+
         self._resultstable = self._findresultstable(votable)
         if not self._resultstable:
             raise DALFormatError(
@@ -376,9 +382,13 @@ class DALResults:
 
     def _findstatusinfo(self, infos):
         # this can be overridden to specialize for a particular DAL protocol
+        status = None
+        # return the last status to catch potential overflow or error sent
+        # after the results.
         for info in infos:
             if info.name.lower() == 'query_status':
-                return info
+                status = info
+        return status
 
     def _findinfos(self, votable):
         # this can be overridden to specialize for a particular DAL protocol
@@ -391,7 +401,7 @@ class DALResults:
         return infos
 
     def __repr__(self):
-        return repr(self.to_table())
+        return f"<DALResults{repr(self.to_table())[1:]}"
 
     @property
     def queryurl(self):
@@ -424,11 +434,22 @@ class DALResults:
         """
         return self.resultstable.to_table(use_names_over_ids=True)
 
+    def to_qtable(self):
+        """
+        Returns a astropy QTable object containing quantities instead of simple
+        values
+
+        Returns
+        -------
+        `astropy.table.QTable`
+        """
+        return QTable(self.resultstable.to_table(use_names_over_ids=True))
+
     @property
     def table(self):
         warn(AstropyDeprecationWarning(
             'Using the table property is deprecated. '
-            'Please use se to_table() instead.'
+            'Please use the to_table() instead.'
         ))
         return self.to_table()
 
@@ -706,8 +727,8 @@ class Record(Mapping):
         for fieldname in self._results.fieldnames:
             field = self._results.getdesc(fieldname)
             if (field.utype and "access.reference" in field.utype.lower()) or (
-                    field.ucd and "meta.dataset" in field.ucd and
-                    "meta.ref.url" in field.ucd
+                    field.ucd and "meta.dataset" in field.ucd
+                    and "meta.ref.url" in field.ucd
             ):
                 out = self[fieldname]
                 if isinstance(out, bytes):
@@ -717,7 +738,7 @@ class Record(Mapping):
 
     def getdataobj(self):
         """
-        return the appropiate data object suitable for the data content behind
+        return the appropriate data object suitable for the data content behind
         this record.
         """
         return mime_object_maker(self.getdataurl(), self.getdataformat())
@@ -762,8 +783,11 @@ class Record(Mapping):
             response = self._session.get(url, stream=True, timeout=timeout)
         else:
             response = self._session.get(url, stream=True)
+        try:
+            response.raise_for_status()
+        except requests.RequestException as ex:
+            raise DALServiceError.from_except(ex, url)
 
-        response.raise_for_status()
         return response.raw
 
     def cachedataset(self, filename=None, dir=".", timeout=None, bufsize=None):

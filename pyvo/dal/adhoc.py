@@ -5,6 +5,7 @@ Datalink classes and mixins
 import numpy as np
 import warnings
 import copy
+import requests
 from collections import OrderedDict
 
 from .query import DALResults, DALQuery, DALService, Record
@@ -16,15 +17,13 @@ from astropy.io.votable.tree import Param
 from astropy import units as u
 from astropy.units import Quantity, Unit
 from astropy.units import spectral as spectral_equivalencies
-from pyvo.utils.compat import ASTROPY_LT_4_1
 
 from astropy.io.votable.tree import Resource, Group
 from astropy.utils.collections import HomogeneousList
 
 from ..utils.decorators import stream_decode_content
 from ..utils import vocabularies
-from .params import PosQueryParam, IntervalQueryParam, TimeQueryParam,\
-    EnumQueryParam
+from .params import PosQueryParam, IntervalQueryParam, TimeQueryParam, EnumQueryParam
 from ..dam.obscore import POLARIZATION_STATES
 
 # calls to DataLink from the results pages are batched for performance
@@ -107,6 +106,7 @@ class AdhocServiceResultsMixin:
     """
     Mixing for adhoc:service functionallity for results classes.
     """
+
     def __init__(self, votable, url=None, session=None):
         super().__init__(votable, url=url, session=session)
 
@@ -132,9 +132,7 @@ class AdhocServiceResultsMixin:
         Resource
             The resource element describing the service.
         """
-        if ASTROPY_LT_4_1 and isinstance(ivo_id, str):
-            ivo_id = ivo_id.encode('utf-8')
-        if not ASTROPY_LT_4_1 and isinstance(ivo_id, bytes):
+        if isinstance(ivo_id, bytes):
             ivo_id = ivo_id.decode('utf-8')
         for adhocservice in self.iter_adhocservices():
             if any(
@@ -201,7 +199,7 @@ class DatalinkResultsMixin(AdhocServiceResultsMixin):
                     if batch_size is None:
                         # first call.
                         self.query = DatalinkQuery.from_resource(
-                            [_ for _ in self], self._datalink)
+                            [_ for _ in self], self._datalink, session=self._session)
                         remaining_ids = self.query['ID']
                     if not remaining_ids:
                         # we are done
@@ -217,10 +215,10 @@ class DatalinkResultsMixin(AdhocServiceResultsMixin):
                             'Could not retrieve datalinks for: {}'.format(
                                 ', '.join([_ for _ in remaining_ids])))
                     batch_size = len(current_ids)
-                id = current_ids.pop(0)
-                processed_ids.append(id)
-                remaining_ids.remove(id)
-                yield current_batch.clone_byid(id)
+                id1 = current_ids.pop(0)
+                processed_ids.append(id1)
+                remaining_ids.remove(id1)
+                yield current_batch.clone_byid(id1)
             elif row.access_format == DATALINK_MIME_TYPE:
                 yield DatalinkResults.from_result_url(row.getdataurl())
             else:
@@ -233,21 +231,25 @@ class DatalinkRecordMixin:
 
     - ``getdataset()`` considers datalink.
     """
+
     def getdatalink(self):
         try:
             datalink = self._results.get_adhocservice_by_ivoid(DATALINK_IVOID)
 
-            query = DatalinkQuery.from_resource(self, datalink)
+            query = DatalinkQuery.from_resource(self, datalink, session=self._session)
             return query.execute()
         except DALServiceError:
-            return DatalinkResults.from_result_url(self.getdataurl())
+            return DatalinkResults.from_result_url(self.getdataurl(), session=self._session)
 
     @stream_decode_content
     def getdataset(self, timeout=None):
         try:
             url = next(self.getdatalink().bysemantics('#this')).access_url
             response = self._session.get(url, stream=True, timeout=timeout)
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except requests.RequestException as ex:
+                raise DALServiceError.from_except(ex, url)
             return response.raw
         except (DALServiceError, ValueError, StopIteration):
             # this should go to Record.getdataset()
@@ -383,9 +385,9 @@ class DatalinkQuery(DALQuery):
             elif np.isscalar(input_param.value) and input_param.value:
                 query_params[name] = input_param.value
             elif (
-                    not np.isscalar(input_param.value) and
-                    input_param.value.all() and
-                    len(input_param.value)
+                    not np.isscalar(input_param.value)
+                    and input_param.value.all()
+                    and len(input_param.value)
             ):
                 query_params[name] = " ".join(
                     str(_) for _ in input_param.value)
@@ -421,9 +423,9 @@ class DatalinkQuery(DALQuery):
         """
         super().__init__(baseurl, session=session, **keywords)
 
-        if id:
+        if id is not None:
             self["ID"] = id
-        if responseformat:
+        if responseformat is not None:
             self["RESPONSEFORMAT"] = responseformat
 
     def execute(self, post=False):
@@ -475,7 +477,7 @@ class DatalinkResults(DatalinkResultsMixin, DALResults):
     as an Astropy :py:class:`~astropy.table.table.Table` via the
     following conversion:
 
-    >>> table = results.to_table()
+    ``table = results.to_table()``
 
     ``DatalinkResults`` supports the array item operator ``[...]`` in a
     read-only context.  When the argument is numerical, the result
@@ -561,10 +563,9 @@ class DatalinkResults(DatalinkResultsMixin, DALResults):
             for term in core_terms:
                 if term in voc["terms"]:
                     additional_terms.extend(voc["terms"][term]["narrower"])
-            core_terms = core_terms+additional_terms
+            core_terms = core_terms + additional_terms
 
-        semantics = set("#"+term for term in core_terms
-            ) | set(other_terms)
+        semantics = set("#" + term for term in core_terms) | set(other_terms)
         for record in self:
             if record.semantics in semantics:
                 yield record
@@ -592,12 +593,7 @@ class DatalinkResults(DatalinkResultsMixin, DALResults):
         for index, row in enumerate(rows):
             votable.array[index] = row
         # now remove unreferenced services from resources
-        if ASTROPY_LT_4_1:
-            referenced_serviced = \
-                [x.decode('utf-8') for x in votable.array['service_def'] if x]
-        else:
-            referenced_serviced = \
-                [x for x in votable.array['service_def'] if x]
+        referenced_serviced = [x for x in votable.array['service_def'] if x]
         # remove customized that are not referenced by the current results
         for x in copy_tb.resources:
             if x.ID and x.ID not in referenced_serviced:
@@ -641,6 +637,7 @@ class SodaRecordMixin:
     If used, it's result class must have
     `pyvo.dal.datalink.AdhocServiceResultsMixin` mixed in.
     """
+
     def _get_soda_resource(self):
         try:
             return self._results.get_adhocservice_by_ivoid(SODA_SYNC_IVOID)
@@ -825,7 +822,7 @@ class DatalinkRecord(DatalinkRecordMixin, SodaRecordMixin, Record):
 class AxisParamMixin():
     """
     Stores the axis parameters (pos, band, time and pol) used in SODA
-    or SIAv2 queries
+    or SIA2 queries
     """
     @property
     def pos(self):
@@ -861,21 +858,22 @@ class SodaQuery(DatalinkQuery, AxisParamMixin):
     """
     a class for preparing a query to a SODA Service.
     """
+
     def __init__(
             self, baseurl, circle=None, range=None, polygon=None, band=None,
             **kwargs):
         super().__init__(baseurl, **kwargs)
 
-        if circle:
+        if circle is not None:
             self.circle = circle
 
-        if range:
+        if range is not None:
             self.range = range
 
-        if polygon:
+        if polygon is not None:
             self.polygon = polygon
 
-        if band:
+        if band is not None:
             self.band = band
 
     @property

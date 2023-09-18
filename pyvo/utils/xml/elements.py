@@ -2,6 +2,7 @@
 
 from inspect import getmembers
 from functools import partial
+import warnings
 
 from astropy.utils.xml import iterparser
 from astropy.io.votable.exceptions import warn_or_raise
@@ -10,7 +11,7 @@ from pyvo.utils.xml.exceptions import UnknownElementWarning
 __all__ = [
     "xmlattribute", "xmlelement",
     "make_add_complexcontent", "make_add_simplecontent",
-    "Element", "ContentMixin", "parse_for_object"]
+    "Element", "ElementWithXSIType", "ContentMixin", "parse_for_object"]
 
 
 def parse_for_object(
@@ -95,6 +96,7 @@ class xmlelement(property):
     """
 
     """
+
     def __init__(
         self, fget=None, fset=None, fdel=None, fadd=None, fformat=None,
         doc=None, name=None, ns=None, plain=False, cls=None, multiple_exc=None
@@ -260,7 +262,9 @@ def make_add_simplecontent(
     This means elements with no child elements.
     If exc_class is given, warn or raise if element was already set.
     """
-    def add_simplecontent(iterator, tag, data, config, pos):
+    def add_simplecontent(iterator, tag_ignored, data_ignored, config, pos_ignored):
+        # Ignored parameters are kept in the API signature to be compatible
+        # with other functions.
         for start, tag, data, pos in iterator:
             if not start and tag == element_name:
                 attr = getattr(self, attr_name)
@@ -290,6 +294,7 @@ class Element:
     Subclasses and Mixins must initialize their independent attributes after
     calling ``super().__init__``.
     """
+
     def __init__(self, config=None, pos=None, _name='', _ns='', **kwargs):
         if config is None:
             config = {}
@@ -359,10 +364,70 @@ class Element:
                     w.element(name, str(child))
 
 
+class ElementWithXSIType(Element):
+    """
+    An XML element that supports type dispatch through xsi:type.
+
+    When a class A is derived from this, it gains a decorator
+    register_xsi_type, which classes derived from A can use to say
+    "construct me rather than A when xsi:type has the value I'm putting
+    in.
+
+    At this point we are doing *no* namespace processing in our XML
+    parsing.  Hence, we discard any prefixes both when registering
+    and when matching.
+
+    We probably should do namespaces one day; astropy.utils.xml will
+    presumably learn them when they add VO-DML support.  Let's revisit
+    this when it's there safely.  Meanwhere, use canonical Registry
+    prefixes (cf. RegTAP 1.1, sect. 5) everywhere in your code; these
+    will continue to be safe no matter what.
+    """
+    _xsi_type_mapping = {}
+
+    @classmethod
+    def register_xsi_type(cls, typename):
+        """Decorator factory for registering subtypes."""
+        def register(class_):
+            """Decorator for registering subtypes"""
+            cls._xsi_type_mapping[typename.split(":")[-1]] = class_
+            return class_
+        return register
+
+    def __new__(cls, *args, **kwargs):
+        xsi_type = None
+        # Another namespace trouble: people can bind the xsi URI
+        # to anything, *and* it's not unlikely they have another
+        # type attribute, too.  Wiggle out of it by preferring a
+        # literal xsi:type and otherwise hope for the best.  This
+        # really needs to be fixed when we switch to namespace-aware
+        # parsing.
+        for name, val in kwargs.items():
+            if name == "xsi:type":
+                xsi_type = val
+                break
+            elif name.split(":")[-1] == "type":
+                xsi_type = val
+
+        if xsi_type is None:
+            dtype = cls
+        else:
+            try:
+                dtype = cls._xsi_type_mapping[xsi_type.split(":")[-1]]
+            except KeyError:
+                warnings.warn(f"Unknown xsi:type {xsi_type} ignored")
+                dtype = cls
+
+        obj = Element.__new__(dtype)
+        obj.__init__(*args, **kwargs)
+        return obj
+
+
 class ContentMixin(Element):
     """
     Mixin class for elements with inner content.
     """
+
     def __init__(self, config=None, pos=None, _name=None, _ns=None, **kwargs):
         super().__init__(config, pos, _name, _ns, **kwargs)
         self._content = None

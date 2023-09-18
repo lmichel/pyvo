@@ -265,30 +265,32 @@ class JobSummary(Element):
 
     @errorsummary.adder
     def errorsummary(self, iterator, tag, data, config, pos):
-        self._errorsummary = ErrorSummary(config, pos,
-                                          'errorSummary', **data)
-
-    @uwselement(plain=True)
-    def message(self):
-        """the error message"""
-        return self._message
-
-    @message.setter
-    def message(self, message):
-        self._message = message
+        res = ErrorSummary(config, pos, 'errorSummary', **data)
+        res.parse(iterator, config)
+        self._errorsummary = res
 
 
-class JobList(UWSElement, HomogeneousList):
+class Jobs(HomogeneousList, UWSElement):
+    """A parsed representation of the joblist endpoint.
+    """
     def __init__(self, config=None, pos=None, _name='jobs', **kwargs):
         HomogeneousList.__init__(self, JobSummary)
         UWSElement.__init__(self, config, pos, _name, **kwargs)
 
-    @uwselement(name='jobref')
+    @uwselement
     def jobs(self):
         return self
 
     @jobs.adder
     def jobs(self, iterator, tag, data, config, pos):
+        return
+
+    @uwselement(name='jobref')
+    def joblist(self):
+        return self
+
+    @joblist.adder
+    def joblist(self, iterator, tag, data, config, pos):
         job = JobSummary(config, pos, 'jobref', **data)
         job.parse(iterator, config)
         self.append(job)

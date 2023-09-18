@@ -5,7 +5,6 @@ A module for accessing remote source and observation catalogs
 from functools import partial
 from datetime import datetime
 from time import sleep
-from packaging.version import Version
 
 import requests
 from urllib.parse import urlparse, urljoin
@@ -23,6 +22,7 @@ from ..io.vosi import tapregext as tr
 
 from ..utils.formatting import para_format_desc
 from ..utils.http import use_session
+from ..utils.prototype import prototype_feature
 import xml.etree.ElementTree
 import io
 
@@ -30,6 +30,14 @@ __all__ = [
     "search", "escape", "TAPService", "TAPQuery", "AsyncTAPJob", "TAPResults"]
 
 IVOA_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+# file formats supported by table upload and their corresponding MIME types
+TABLE_UPLOAD_FORMAT = {'tsv': 'text/tab-separated-values',
+                       'csv': 'text/csv',
+                       'FITSTable': 'application/fits'}
+# file formats supported by table create and their corresponding MIME types
+TABLE_DEF_FORMAT = {'VOSITable': 'text/xml',
+                    'VOTable': 'application/x-votable+xml'}
 
 
 def _from_ivoa_format(datetime_str):
@@ -101,7 +109,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
 
     def __init__(self, baseurl, session=None):
         """
-        instantiate a Tablee Access Protocol service
+        instantiate a Table Access Protocol service
 
         Parameters
         ----------
@@ -115,7 +123,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         # Check if the session has an update_from_capabilities attribute.
         # This means that the session is aware of IVOA capabilities,
         # and can use this information in processing network requests.
-        # One such usecase for this is auth.
+        # One such use case for this is auth.
         if hasattr(self._session, 'update_from_capabilities'):
             self._session.update_from_capabilities(self.capabilities)
 
@@ -451,6 +459,127 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
             cap.describe()
             print()
 
+    @prototype_feature('cadc-tb-upload')
+    def create_table(self, name, definition, format='VOSITable'):
+        """
+        Creates a table in the catalog service.
+
+        Parameters
+        ----------
+        name: str
+            Name of the table in the TAP service
+        definition: stream (object with a read method)
+            Definition of the table
+        format: str
+            Format of the table definition (VOSITable or VOTable).
+        """
+        if not name or not definition:
+            raise ValueError(
+                'table name and definition required in create: {}/{}'.
+                format(name, definition))
+        if format not in TABLE_DEF_FORMAT.keys():
+            raise ValueError(
+                'Table definition file format {} not supported ({})'.
+                format(format, ' '.join(TABLE_DEF_FORMAT.keys())))
+
+        headers = {'Content-Type': TABLE_DEF_FORMAT[format]}
+        response = self._session.put('{}/tables/{}'.format(self.baseurl, name),
+                                     headers=headers,
+                                     data=definition)
+        response.raise_for_status()
+
+    @prototype_feature('cadc-tb-upload')
+    def remove_table(self, name):
+        """
+        Remove a table from the catalog service (Equivalent to drop command
+        in DB).
+
+        Parameters
+        ----------
+        name: str
+            Name of the table in the TAP service
+        """
+        if not name:
+            raise ValueError(
+                'table name required in : {}'.
+                format(name))
+
+        response = self._session.delete(
+            '{}/tables/{}'.format(self.baseurl, name))
+        response.raise_for_status()
+
+    @prototype_feature('cadc-tb-upload')
+    def load_table(self, name, source, format='tsv'):
+        """
+        Loads content to a table
+
+        Parameters
+        ----------
+        name: str
+            Name of the table
+        source: stream with a read method
+            Stream containing the data to be loaded
+        format: str
+            Format of the data source: tab-separated values(tsv),
+            comma-separated values (csv) or FITS table (FITSTable)
+        """
+        if not name or not source:
+            raise ValueError(
+                'table name and source required in upload: {}/{}'.
+                format(name, source))
+        if format not in TABLE_UPLOAD_FORMAT.keys():
+            raise ValueError(
+                'Table content file format {} not supported ({})'.
+                format(format, ' '.join(TABLE_UPLOAD_FORMAT.keys())))
+
+        headers = {'Content-Type': TABLE_UPLOAD_FORMAT[format]}
+        response = self._session.post(
+            '{}/load/{}'.format(self.baseurl, name),
+            headers=headers,
+            data=source)
+        response.raise_for_status()
+
+    @prototype_feature('cadc-tb-upload')
+    def create_index(self, table_name, column_name, unique=False):
+        """
+        Creates a table index in the catalog service.
+
+        Parameters
+        ----------
+        table_name: str
+            Name of the table
+        column_name: str
+            Name of the column in the table
+        unique: bool
+            True for unique index, False otherwise
+        """
+        if not table_name or not column_name:
+            raise ValueError(
+                'table and column names are required in index: {}/{}'.
+                format(table_name, column_name))
+
+        result = self._session.post('{}/table-update'.format(self.baseurl),
+                                    data={'table': table_name,
+                                          'index': column_name,
+                                          'unique': 'true' if unique
+                                          else 'false'},
+                                    allow_redirects=False)
+
+        if result.status_code == 303:
+            job_url = result.headers['Location']
+            if not job_url:
+                raise RuntimeError(
+                    'table update job location missing in response')
+            # run the job
+            job = AsyncTAPJob(job_url, session=self._session)
+            job = job.run().wait()
+            job.raise_if_error()
+            # TODO job.delete()
+        else:
+            raise RuntimeError(
+                'BUG: table update expected status 303 received {}'.
+                format(result.status_code))
+
 
 class AsyncTAPJob:
     """
@@ -482,10 +611,10 @@ class AsyncTAPJob:
         session : object
            optional session to use for network requests
         """
-        query = TAPQuery(
+        tapquery = TAPQuery(
             baseurl, query, mode="async", language=language, maxrec=maxrec,
             uploads=uploads, session=session, **keywords)
-        response = query.submit()
+        response = tapquery.submit()
         job = cls(response.url, session=session)
         return job
 
@@ -646,7 +775,7 @@ class AsyncTAPJob:
         """
         self._update()
         for parameter in self._job.parameters:
-            if parameter.id_ == 'query':
+            if parameter.id_.lower() == 'query':
                 return parameter.content
         return ''
 
@@ -728,6 +857,15 @@ class AsyncTAPJob:
 
     @property
     def uws_version(self):
+        """
+        the version of the UWS serving this async job
+
+        Asynchronous TAP jobs are managed using a standard called Universal
+        Worker Service (UWS). For instance, starting version 1.1, you can
+        have long polls, which save on monitoring requests.  Normal users
+        generally will not have to look at this.
+
+        """
         self._update()
         return self._job.version
 
@@ -792,10 +930,9 @@ class AsyncTAPJob:
             if cur_phase in phases:
                 break
 
-            # fallback for uws 1.0
-            if Version(self._job.version) < Version("1.1"):
-                sleep(interval)
-                interval = min(120, interval * increment)
+            # fallback for uws 1.0 or unsupported WAIT parameter
+            sleep(interval)
+            interval = min(120, interval * increment)
 
         return self
 
@@ -821,7 +958,11 @@ class AsyncTAPJob:
             if theres an error
         """
         if self.phase in {"ERROR", "ABORTED"}:
-            raise DALQueryError("Query Error", self.phase, self.url)
+            msg = ""
+            if self._job and self._job.errorsummary:
+                msg = self._job.errorsummary.message.content
+            msg = msg or "<No useful error from server>"
+            raise DALQueryError("Query Error: " + msg, self.url)
 
     def fetch_result(self):
         """
@@ -904,6 +1045,13 @@ class TAPQuery(DALQuery):
 
     @property
     def queryurl(self):
+        """
+        the URL to which to submit queries
+
+        In TAP, that varies depending on whether we run sync or async
+        queries.
+
+        """
         return '{baseurl}/{mode}'.format(baseurl=self.baseurl, mode=self._mode)
 
     def execute_stream(self, post=False):
@@ -968,8 +1116,7 @@ class TAPResults(DatalinkResultsMixin, DALResults):
     The list of matching images resulting from an image (SIA) query.
     Each record contains a set of metadata that describes an available
     image matching the query constraints.  The number of records in
-    the results is available via the :py:attr:`nrecs` attribute or by
-    passing it to the Python built-in ``len()`` function.
+    the results is available by passing it to the Python built-in ``len()`` function.
 
     This class supports iterable semantics; thus,
     individual records (in the form of
@@ -994,7 +1141,7 @@ class TAPResults(DatalinkResultsMixin, DALResults):
     as an Astropy :py:class:`~astropy.table.table.Table` via the
     following conversion:
 
-    >>> table = results.table
+    ``table = results.table``
 
     ``SIAResults`` supports the array item operator ``[...]`` in a
     read-only context.  When the argument is numerical, the result
@@ -1048,7 +1195,7 @@ class TAPResults(DatalinkResultsMixin, DALResults):
         --------
         Record
         """
-        return TAPRecord(self, index)
+        return TAPRecord(self, index, session=self._session)
 
 
 class TAPRecord(SodaRecordMixin, DatalinkRecordMixin, Record):

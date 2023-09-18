@@ -9,10 +9,12 @@ import requests_mock
 
 import pytest
 
-from pyvo.dal.sia2 import search, SIAService, SIAQuery
+from pyvo.dal.sia2 import search, SIA2Service, SIA2Query, SIAService, SIAQuery
 
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.utils.data import get_pkg_data_contents
+from astropy.utils.exceptions import AstropyDeprecationWarning
 
 get_pkg_data_contents = partial(
     get_pkg_data_contents, package=__package__, encoding='binary')
@@ -50,13 +52,13 @@ def _test_result(record):
 @pytest.mark.filterwarnings("ignore::astropy.io.votable.exceptions.W06")
 def test_search():
     results = search('https://example.com/sia',
-                     pos=(33.3*u.deg, 4.2*u.deg, 0.0166*u.deg))
+                     pos=(33.3 * u.deg, 4.2 * u.deg, 0.0166 * u.deg))
     result = results[0]
 
     _test_result(result)
 
 
-class TestSIAService:
+class TestSIA2Service:
 
     def test_capabilities(self):
         # this tests the SIA2 capabilities with various combinations:
@@ -79,60 +81,72 @@ class TestSIAService:
 
             # multiple interfaces with single security method each and
             # anonymous access.
-            service = SIAService('https://example.com/sia')
+            service = SIA2Service('https://example.com/sia')
             assert service.query_ep == 'https://example.com/sia/v2query'
 
             # one interfaces with BasicAA security method - this should fail
             # because pyvo does not support BasicAA
             with pytest.raises(AttributeError):
-                service = SIAService('https://example.com/sia-basicauth')
+                service = SIA2Service('https://example.com/sia-basicauth')
 
             # one interface with multiple security methods
-            service = SIAService('https://example.com/sia-newformat')
+            service = SIA2Service('https://example.com/sia-newformat')
             assert service.query_ep == 'https://example.com/sia/v2query'
 
             # multiple interfaces with single security method each (no anon)
-            service = SIAService('https://example.com/sia-priv')
+            service = SIA2Service('https://example.com/sia-priv')
             assert service.query_ep == 'https://example.com/sia/v2query'
+
+    POSITIONS = [(2, 4, 0.0166 * u.deg),
+                 (12, 12.5, 34, 36),
+                 (12.0 * u.deg, 34.0 * u.deg,
+                  14.0 * u.deg, 35.0 * u.deg,
+                  14.0 * u.deg, 36.0 * u.deg,
+                  12.0 * u.deg, 35.0 * u.deg),
+                 (SkyCoord(2, 4, unit='deg'), 0.166 * u.deg)]
 
     @pytest.mark.usefixtures('sia')
     @pytest.mark.usefixtures('capabilities')
     @pytest.mark.filterwarnings("ignore::astropy.io.votable.exceptions.W06")
     @pytest.mark.filterwarnings("ignore::astropy.io.votable.exceptions.W42")
     @pytest.mark.filterwarnings("ignore::astropy.io.votable.exceptions.W49")
-    def test_search(self):
-        service = SIAService('https://example.com/sia')
+    @pytest.mark.parametrize("position", POSITIONS)
+    def test_search_scalar(self, position):
+        service = SIA2Service('https://example.com/sia')
 
-        positions = [
-            (2, 4, 0.0166 * u.deg),
-            (12, 12.5, 34, 36),
-            (12.0*u.deg, 34.0*u.deg,
-             14.0*u.deg, 35.0*u.deg,
-             14.0*u.deg, 36.0*u.deg,
-             12.0*u.deg, 35.0*u.deg)]
-
-        # each position
-        for pos in positions:
-            results = service.search(pos=pos)
-            result = results[0]
-            _test_result(result)
-
-        # all positions
-        results = service.search(pos=positions)
+        results = service.search(pos=position)
         result = results[0]
         _test_result(result)
 
+    @pytest.mark.usefixtures('sia')
+    @pytest.mark.usefixtures('capabilities')
+    def test_search_vector(self, pos=POSITIONS):
+        service = SIA2Service('https://example.com/sia')
+        results = service.search(pos=pos)
+        result = results[0]
+        _test_result(result)
 
-class TestSIAQuery():
+    @pytest.mark.usefixtures('sia')
+    @pytest.mark.usefixtures('capabilities')
+    def test_search_deprecation(self, pos=POSITIONS):
+        # test the deprecation
+        with pytest.warns(AstropyDeprecationWarning):
+            deprecated_service = SIAService('https://example.com/sia')
+            deprecated_results = deprecated_service.search(pos=pos)
+            result = deprecated_results[0]
+            _test_result(result)
+
+
+class TestSIA2Query():
 
     def test_query(self):
-        query = SIAQuery('someurl')
+        query = SIA2Query('someurl')
         query.field_of_view.add((10, 20))
         assert query['FOV'] == ['10.0 20.0']
-        query.field_of_view.add((1*u.rad, 60))
+        query.field_of_view.add((1 * u.rad, 60))
         assert query['FOV'] == ['10.0 20.0', '57.29577951308232 60.0']
 
-        query.spatial_resolution.add((1*u.arcsec, 2))
+        query.spatial_resolution.add((1 * u.arcsec, 2))
         assert query['SPATRES'] == ['1.0 2.0']
 
         query.spectral_resolving_power.add((3, 5))
@@ -174,11 +188,24 @@ class TestSIAQuery():
         query.maxrec = 1000
         assert query['MAXREC'] == '1000'
 
-        query = SIAQuery('someurl', custom_param=23)
+        query = SIA2Query('someurl', custom_param=23)
         assert query['custom_param'] == ['23']
 
         query['custom_param'].append('-Inf 0')
         assert query['custom_param'] == ['23', '-Inf 0']
 
-        query = SIAQuery('someurl', custom_param=[('-Inf', 0), (2, '+Inf')])
+        query = SIA2Query('someurl', custom_param=[('-Inf', 0), (2, '+Inf')])
         assert query['custom_param'] == ['-Inf 0', '2 +Inf']
+
+        with pytest.warns(AstropyDeprecationWarning):
+            deprecated_query = SIAQuery('someurl')
+            deprecated_query.field_of_view.add((10, 20))
+            assert deprecated_query['FOV'] == ['10.0 20.0']
+
+
+def test_variable_deprecation():
+    # Test this while we are in the deprecation period, as the variable is durectly
+    # used at least by astroquery.alma
+    with pytest.warns(AstropyDeprecationWarning):
+        from pyvo.dal.sia2 import SIA_PARAMETERS_DESC
+        assert SIA_PARAMETERS_DESC
