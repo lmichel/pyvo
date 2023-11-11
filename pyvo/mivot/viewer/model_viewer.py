@@ -4,14 +4,17 @@ Created on 5 Jan 2022
 @author: laurentmichel
 """
 from copy import deepcopy
-
 from astropy.io.votable import parse
 from lxml import etree
-
 from pyvo.mivot import logger
 from pyvo.mivot.utils.vocabulary import Ele, Att
 from pyvo.mivot.utils.constant import Constant
-from pyvo.mivot.utils.exceptions import *
+from pyvo.mivot.utils.exceptions import (
+    MappingException,
+    ResourceNotFound,
+    MivotElementNotFound,
+    MivotNotFound
+    )
 from pyvo.mivot.utils.xml_utils import XmlUtils
 from pyvo.mivot.seekers.annotation_seeker import AnnotationSeeker
 from pyvo.mivot.seekers.resource_seeker import ResourceSeeker
@@ -127,7 +130,7 @@ class ModelViewer(object):
     def get_templates_models(self):
         """
         COLLECTION not implemented yet
-        :return : The dmtypes (except ivoa:*) of all INSTANCE/COLLECTION of all TEMPLATES
+        :return : The dmtypes (except ivoa:..) of all INSTANCE/COLLECTION of all TEMPLATES
         :rtype:  {'tableref: {'COLLECTIONS': [dmtypes], 'INSTANCE': [dmtypes]}, ...}
         """
         retour = {}
