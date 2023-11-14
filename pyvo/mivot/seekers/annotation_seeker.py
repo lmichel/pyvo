@@ -12,31 +12,52 @@ from pyvo.utils.prototype import prototype_feature
 @prototype_feature('MIVOT')
 class AnnotationSeeker(object):
     """
-    This class provides tools extracting mapping sub-blocks that are often used by other stakeholders.
-    All functions using the mapping are using this class to get XML elements.
-    To make the job simpler for other tools, the XML namespace is removed from the mapping block whatever it is.
+    This class provides tools for extracting mapping sub-blocks commonly used by other stakeholders.
+    All functions using the mapping employ this class to obtain XML elements.
+    To simplify the job for other tools, the XML namespace is removed from the mapping block.
+
+    Attributes
+    ----------
+    _xml_block : ~lxml.etree._Element
+        Full mapping block.
+    _globals_block : ~lxml.etree._Element or None
+        GLOBALS block.
+    _templates_blocks : dict
+        Templates dictionary where keys are tableref and values are XML-TEMPLATES.
+
+    Methods
+    -------
+    __init__(xml_block)
+        Initializes the AnnotationSeeker.
+
+    _find_globals_block()
+        Finds the GLOBALS block in the XML mapping block.
+
+    _find_templates_blocks()
+        Finds the TEMPLATES blocks in the XML mapping block.
+
+    _rename_ref_and_join()
+        Removes the namespaces from specific elements and appends numbers to JOIN/REFERENCE.
     """
 
     def __init__(self, xml_block):
         """
+        Initializes the AnnotationSeeker.
         - Split the mapping as elements of interest
         - remove the name_spaces
         - Append numbers to JOIN/REFERENCE
 
-        :param xml_block: XML mapping block (etree.Element)
+        Parameters
+        ----------
+        xml_block : ~lxml.etree._Element
+            XML mapping block.
         """
-        # Full mapping blocks
         self._xml_block = xml_block
-        # GLOBALS bock
         self._globals_block = None
-        # Templates dictionary {tableref: XML-TEMPLATES}
         self._templates_blocks = {}
 
-        # Find the GLOBALS block
         self._find_globals_block()
-        # Find the TEMPLATES blocks
         self._find_templates_blocks()
-        # Remove the namespaces from specific elements and make them unique
         self._rename_ref_and_join()
 
     def _find_globals_block(self):
@@ -51,6 +72,13 @@ class AnnotationSeeker(object):
     def _find_templates_blocks(self):
         """
         Finds and sets the TEMPLATES blocks within the XML mapping block.
+        This method iterates through the children of the XML mapping block, identifies TEMPLATES blocks, and
+        associates them with their respective tableref values in the _templates_blocks dictionary.
+
+        Raises
+        ------
+        MivotElementNotFound
+        If a TEMPLATES block is found without a tableref attribute, and there are already other TEMPLATES blocks.
         """
         for child in self._xml_block:
             if self._name_match(child.tag, Ele.TEMPLATES):
