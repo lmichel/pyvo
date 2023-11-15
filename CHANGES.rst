@@ -40,6 +40,9 @@
 
 - TAP examples now support the continuation property [#483]
 
+- Introducing the new MIVOT feature, enabling the mapping of
+  VOTable data to any model serialized in VO-DML. [#497]
+
 
 1.4.3 (unreleased)
 ==================
