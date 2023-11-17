@@ -8,10 +8,7 @@ import pytest
 from pyvo.mivot.version_checker import check_astropy_version
 from pyvo.mivot.viewer.model_viewer import ModelViewer
 from pyvo.utils.prototype import activate_features
-from pyvo.mivot.utils.exceptions import AstropyVersionException
-from astropy import version as astropy_version
 activate_features('MIVOT')
-
 
 
 def test_model_viewer_layer1(m_viewer):

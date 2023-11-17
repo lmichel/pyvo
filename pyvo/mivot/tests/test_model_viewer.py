@@ -102,8 +102,8 @@ def test_check_version(data_path):
                            match=f"Astropy version {astropy_version.version} "
                                  f"is below the required version 6.0 for the use of MIVOT."):
             ModelViewer(votable_path=votable)
-    
-    
+
+
 @pytest.fixture
 def m_viewer(data_path):
     if check_astropy_version() is False:

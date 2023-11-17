@@ -1,4 +1,3 @@
-from pyvo.mivot.utils.exceptions import AstropyVersionException
 from astropy import version as astropy_version
 
 

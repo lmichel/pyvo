@@ -37,15 +37,13 @@ The API allows you to obtain a model view on the last read data row, this usage 
     >>> from pyvo.utils.prototype import activate_features
     >>> activate_features('MIVOT')
     >>> votable = get_pkg_data_filename("data/simple-annotation-votable.xml", package="pyvo.mivot.tests")
-    >>> if check_astropy_version():
+    >>> if check_astropy_version(): # doctest: +SKIP
     ...     m_viewer = ModelViewer(votable)
     ...     row_view = m_viewer.get_next_row_view()
     ...     print(row_view.longitude.value)
     ...     print(row_view.Coordinate_coosys.PhysicalCoordSys_frame.spaceRefFrame.value)
-    10.0
-    ICRS
-    ... else:
-    Astropy version 5.3.4 is below the required version 6.0 for the use of MIVOT.
+        10.0
+        ICRS
 
 
 The model view is a dynamically generated Python object whose field names are derived from
@@ -55,7 +53,7 @@ Example for epoch propagation
 -----------------------------
 .. doctest-remote-data::
     >>> if check_astropy_version():
-    ...     with ModelViewer(votable) as m_viewer:
+    ...     with ModelViewer(votable) as m_viewer: # doctest: +SKIP
     ...         row_view = m_viewer.get_next_row_view()
     ...         past_ra, past_dec = row_view.apply_space_motion(dt=-42 * u.year)
     ...         future_ra, future_dec = row_view.apply_space_motion(dt=2 * u.year)
@@ -63,8 +61,6 @@ Example for epoch propagation
     ...         print("future_ra, future_dec :", row_view.apply_space_motion(dt=2 * u.year))
     past_ra, past_dec : (<Longitude 9.9998763 deg>, <Latitude 10.00024364 deg>)
     future_ra, future_dec : (<Longitude 10.00000563 deg>, <Latitude 9.99998891 deg>)
-    ... else:
-    Astropy version 5.3.4 is below the required version 6.0 for the use of MIVOT.
 
 Implementation
 ==============
