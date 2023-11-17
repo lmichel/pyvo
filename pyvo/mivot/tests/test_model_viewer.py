@@ -113,18 +113,6 @@ def m_viewer(data_path):
 
 
 @pytest.fixture
-def votable_test(data_path):
-    votable = os.path.join(data_path, "data/vizier_csc2_gal.annot.xml")
-    return votable
-
-
-@pytest.fixture
-def simple_votable(data_path):
-    votable = os.path.join(data_path, "data/simple-annotation-votable.xml")
-    return votable
-
-
-@pytest.fixture
 def data_path():
     return os.path.dirname(os.path.realpath(__file__))
 

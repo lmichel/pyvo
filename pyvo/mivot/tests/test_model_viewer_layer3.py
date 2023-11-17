@@ -78,12 +78,6 @@ def recursive_check(MivotClass, **kwargs):
 
 
 @pytest.fixture
-def m_viewer(data_path):
-    votable = os.path.join(data_path, "data/input/test.1.xml")
-    return ModelViewer(votable_path=votable)
-
-
-@pytest.fixture
 def votable_test(data_path):
     votable = os.path.join(data_path, "data/vizier_csc2_gal.annot.xml")
     return votable
