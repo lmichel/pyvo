@@ -4,4 +4,3 @@ sphinx-astropy
 # https://github.com/sphinx-doc/sphinx/issues/9727
 
 docutils<0.18
-lxml
