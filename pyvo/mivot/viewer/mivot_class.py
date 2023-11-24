@@ -2,9 +2,6 @@
 """
 MivotClass keep as an attribute dictionary __dict__ all XML objects.
 """
-from astropy.time import Time
-
-from pyvo.mivot.features.epoch_propagation import EpochPropagation
 from pyvo.utils.prototype import prototype_feature
 
 
@@ -18,8 +15,6 @@ class MivotClass:
     "key" : "value"      means key is an element of ATTRIBUTE
     "key" : []           means key is the dmtype of a COLLECTION
     """
-    EpochPropagation = EpochPropagation("EpochPropagation")
-    REFERENCE = {}
 
     def __init__(self, **kwargs):
         """
@@ -36,46 +31,13 @@ class MivotClass:
                 for item in value:
                     self.__dict__[self._remove_model_name(key)].append(MivotClass(**item))
 
-            elif isinstance(value, dict) and 'value' not in value:
-                self.__dict__[self._remove_model_name(key, True)] = MivotClass(**value)
-
-            else:
-                if isinstance(value, dict) and self._is_leaf(**value):
+            elif isinstance(value, dict):
+                if not self._is_leaf(**value):
+                    self.__dict__[self._remove_model_name(key, True)] = MivotClass(**value)
+                if self._is_leaf(**value):
                     self.__dict__[self._remove_model_name(key)] = MivotClass(**value)
-                    if self.dmtype == "EpochPosition":
-                        self._fill_epoch_propagation(key.lower(), value)
-                    if "frame" in key.lower() and "string" in value["dmtype"]:
-                        self.EpochPropagation.REFERENCE["frame"] = value["value"].lower()
-                else:
-                    self.__dict__[self._remove_model_name(key)] = self._remove_model_name(value)
-
-    def _fill_epoch_propagation(self, key_low, value):
-        """
-        Fill the REFERENCE dictionary of the EpochPropagation object.
-
-        Parameters
-        ----------
-        key_low : str
-            The key of the dictionary in lowercase.
-        value : dict
-            The value of the dictionary.
-        """
-        if ("longitude" or "ra") in key_low:
-            if "pm" not in key_low and value["unit"] == "deg":
-                self.EpochPropagation.REFERENCE["longitude"] = value['value']
-            elif "pm" in key_low and value["unit"] == "mas/year":
-                self.EpochPropagation.REFERENCE["pm_longitude"] = value['value']
-        if ("latitude" or "dec") in key_low:
-            if "pm" not in key_low and value["unit"] == "deg":
-                self.EpochPropagation.REFERENCE["latitude"] = value['value']
-            elif "pm" in key_low and value["unit"] == "mas/year":
-                self.EpochPropagation.REFERENCE["pm_latitude"] = value['value']
-        if ("radial" or "velocity") in key_low and value["unit"] == "km/s":
-            self.EpochPropagation.REFERENCE["radial_velocity"] = value["value"]
-        if "parallax" in key_low and value["unit"] == ("mas" or "pc"):
-            self.EpochPropagation.REFERENCE["parallax"] = value["value"]
-        if "epoch" in key_low and value["unit"] == "year":
-            self.EpochPropagation.REFERENCE["epoch"] = Time(value["value"], format="decimalyear")
+            else:
+                self.__dict__[self._remove_model_name(key)] = self._remove_model_name(value)
 
     def _remove_model_name(self, value, role_instance=False):
         """

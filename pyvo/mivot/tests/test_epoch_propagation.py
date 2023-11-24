@@ -9,6 +9,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.time import Time
 
+from pyvo.mivot.features.epoch_propagation import EpochPropagation
 from pyvo.mivot.version_checker import check_astropy_version
 from pyvo.mivot.viewer.model_viewer import ModelViewer
 from pyvo.utils import activate_features
@@ -21,7 +22,7 @@ def test_epoch_propagation(m_viewer):
         pytest.skip("MIVOT test skipped because of the astropy version.")
 
     row_view = m_viewer.get_next_row_view()
-    epoch_propagation = row_view.EpochPropagation
+    EpochProcess = EpochPropagation(row_view)
     sky_coord_to_compare = (SkyCoord(distance=(row_view.parallax.value / 4) * u.pc,
                                      radial_velocity=row_view.radialVelocity.value * u.km / u.s,
                                      ra=row_view.longitude.value * u.degree,
@@ -32,14 +33,14 @@ def test_epoch_propagation(m_viewer):
                                      .PhysicalCoordSys_frame.spaceRefFrame.value.lower(),
                                      obstime=Time(row_view.epoch.value, format="decimalyear")))
 
-    assert sky_coord_to_compare == epoch_propagation.SkyCoordinate()
+    assert sky_coord_to_compare == EpochProcess.SkyCoordinate()
     assert ((sky_coord_to_compare.apply_space_motion(dt=-42 * u.year).ra,
              sky_coord_to_compare.apply_space_motion(dt=-42 * u.year).dec)
-            == epoch_propagation.apply_space_motion(dt=-42 * u.year))
-    assert epoch_propagation.ref_long == 10.0
-    assert epoch_propagation.ref_lat == 10.0
-    assert epoch_propagation.ref_pm_long == 10.0
-    assert epoch_propagation.ref_pm_lat == -20.0
+            == EpochProcess.apply_space_motion(dt=-42 * u.year))
+    assert EpochProcess.ref_long == 10.0
+    assert EpochProcess.ref_lat == 10.0
+    assert EpochProcess.ref_pm_long == 10.0
+    assert EpochProcess.ref_pm_lat == -20.0
 
 
 @pytest.fixture
