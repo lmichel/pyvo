@@ -42,6 +42,7 @@ def test_epoch_propagation(m_viewer):
     assert epoch_propagation.ref_pm_lat == -20.0
 
 
+
 @pytest.fixture
 def m_viewer(data_path):
     if check_astropy_version() is False:
