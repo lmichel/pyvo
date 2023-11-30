@@ -43,7 +43,7 @@ class ResourceSeeker(object):
             elif table.name is not None:
                 retour.append(table.name)
             else:
-                retour.append('AnonymousTable')
+                retour.append(Constant.ANONYMOUS_TABLE)
         return retour
 
     def get_table(self, table_name):
