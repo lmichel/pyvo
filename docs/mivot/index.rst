@@ -149,7 +149,7 @@ Level 4: Integrated to ModelViewerLayer3
 ----------------------------------------
 At this level, science ready objects are directly extracted from the annotation block. The model(s) is totally hidden. 
 The current implementation can build SkyCoord instance from a MANGO:EpochPosition instance. 
-The apply_space_motion transformation has also been wrapped in.
+The apply_space_motion transformation has also been wrapped in. This first science level implementation has been issued on request of the IVOA application wroking group (Tucson 2023) for a conviniant solution based on MIVOT for processing epoch propagation.
 
 .. doctest-remote-data::
     >>> with ModelViewer(votable) as m_viewer: # doctest: +SKIP
