@@ -69,10 +69,7 @@ The Mivot block is provided as an xml tree. This feature is available in Astropy
     >>> from astropy.io.votable import parse
     >>> from pyvo.mivot.utils.xml_utils import XmlUtils
     >>> resource = parse("votable.xml").resources[0]
-    >>> # extract a string serilaization of the mapping block
-    >>> # namespace is purged
-    >>> resource = parse(votable).resources[0]
-    >>> # extract a string serialization of the mapping block
+    >>> # extract a pretty string serialization of the mapping block
     >>> # namespace is purged
     >>> str_mapping_block = (resource.mivot_block.content
     >>>                      .replace('xmlns="http://www.ivoa.net/xml/mivot"', '')
@@ -102,11 +99,29 @@ This XML element is intended to be used as a basis for building any objects.
 The layer 1 output can be browsed using XPATH queries.
 
 .. doctest-remote-data::
-    >>> from pyvo.mivot.viewer.model_viewer_layer1 import ModelViewerLayer1
-    >>> m_viewer.get_next_row() # doctest: +SKIP
-    >>> m_viewer_layer1 = ModelViewerLayer1(m_viewer) # doctest: +SKIP
-    >>> instance = m_viewer_layer1.get_instance_by_type('mango:EpochPosition') # doctest: +SKIP
-
+    >>> from astropy.io.votable import parse
+    >>> from xml.etree import ElementTree as etree
+    >>> from pyvo.mivot.utils.xml_utils import XmlUtils
+    >>> from pyvo.mivot.viewer.model_viewer import ModelViewer, ModelViewerLayer1
+    >>> m_viewer = ModelViewer("votable.xml")
+    >>> m_viewer.get_next_row() 
+    >>> return the XML element mapping the data row
+    >>> # internal references are resolved 
+    >>> # attribute references have been replaced with table rows values
+    >>> XmlUtils.pretty_print(m_viewer._get_model_view())
+    <TEMPLATES>
+        <INSTANCE dmtype="mango:EpochPosition">
+            <ATTRIBUTE dmrole="mango:EpochPosition.longitude" ... value="10.0"/>
+            <ATTRIBUTE dmrole="mango:EpochPosition.latitude" ... value="10.0"/>
+            ....
+ 
+            <INSTANCE dmid="SpaceFrame_ICRS" dmtype="coords:SpaceSys" dmrole="coords:Coordinate.coosys">
+                ...
+               <ATTRIBUTE dmrole="coords:SpaceFrame.spaceRefFrame" dmtype="ivoa:string" value="ICRS"/>
+            </INSTANCE>
+         </INSTANCE>
+    </TEMPLATES>
+    
 Level 2: ModelViewerLayer2
 --------------------------
 Just a few methods to make the browsing of the layer 1 output easier.
