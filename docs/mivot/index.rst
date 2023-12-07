@@ -111,8 +111,7 @@ Level 2: ModelViewerLayer2
 --------------------------
 Just a few methods to make the browsing of the layer 1 output easier.
 The layer 2 API allows users to retrieve MIVOT elements by their @dmrole or @dmtype.
-At this level, the MIVOT block must still be handled as an xml element.
-This module is not completely implemented.
+At this level, the MIVOT block must still be handled as an XML element.
 
 .. doctest-remote-data::
     >>> from astropy.io.votable import parse
@@ -148,7 +147,9 @@ MivotClass basically stores all XML objects in its attribute dictionary :py:attr
 
 Level 4: Integrated to ModelViewerLayer3
 ----------------------------------------
-This level is an extension of ModelViewerLayer3. It can generate SkyCoord instances from MANGO:EpochPosition instances and apply to them an epoch propagation.
+At this level, science ready objects are directly extracted from the annotation block. The model(s) is totally hidden. 
+The current implementation can build SkyCoord instance from a MANGO:EpochPosition instance. 
+The apply_space_motion transformation has also been wrapped in.
 
 .. doctest-remote-data::
     >>> with ModelViewer(votable) as m_viewer: # doctest: +SKIP
