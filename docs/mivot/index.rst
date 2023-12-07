@@ -36,21 +36,6 @@ The highest level (4) is based on the MANGO draft model and especially to its. I
 The model view is a dynamically generated Python object whose field names are derived from
 the dmroles of the MIVOT elements. There is no checking against the model structure at this level.
 
-Example for epoch propagation
------------------------------
-.. doctest-remote-data::
-    >>> with ModelViewer(votable) as m_viewer: # doctest: +SKIP
-    ...     row_view = m_viewer.get_next_row_view()
-    ...     epoch_propagation = row_view.epoch_propagation
-    ...     past_ra, past_dec = epoch_propagation.apply_space_motion(dt=-42 * u.year)
-    ...     future_ra, future_dec = epoch_propagation.apply_space_motion(dt=2 * u.year)
-    ...     print("past_ra, past_dec :", epoch_propagation.apply_space_motion(dt=-42 * u.year))
-    ...     print("future_ra, future_dec :", epoch_propagation.apply_space_motion(dt=2 * u.year))
-    past_ra, past_dec : (<Longitude 9.9998763 deg>, <Latitude 10.00024364 deg>)
-    future_ra, future_dec : (<Longitude 10.00000563 deg>, <Latitude 9.99998891 deg>)
-
-We implement the epoch propagation by using astropy functions and the data provided by the MIVOT block.
-
 Implementation
 ==============
 The implementation relies on the Astropy's write and read annotation modules (6.0+),
