@@ -76,8 +76,8 @@ The Mivot block is provided as an xml tree. This feature is available in Astropy
       </TEMPLATES>
     </VODML>
 
-Level 2: ModelViewerLevel2
---------------------------
+Level 1: ModelViewer
+--------------------
 Provide access to an xml tree whose structure matches the model view of the current row.
 The internal references have been resolved. The attribute values have been set with the actual data values.
 This XML element is intended to be used as a basis for building any objects.
