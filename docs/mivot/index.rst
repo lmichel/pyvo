@@ -65,14 +65,34 @@ Provide the MIVOT block as it is in the VOTable: No references are resolved.
 The Mivot block is provided as an xml tree. This feature is available in Astropy 6.0.
 
 .. doctest-remote-data::
-    >>> import pyvo
-    >>> from astropy.utils.data import get_pkg_data_filename
-    >>> import astropy.units as u
-    >>> from pyvo.mivot.viewer.model_viewer import ModelViewer
-    >>> from pyvo.utils.prototype import activate_features
-    >>> activate_features('MIVOT')
-    >>> votable = get_pkg_data_filename("data/simple-annotation-votable.xml", package="pyvo.mivot.tests")
-    >>> m_viewer = ModelViewer(votable) # doctest: +SKIP
+    >>> from xml.etree import ElementTree as etree
+    >>> from astropy.io.votable import parse
+    >>> from pyvo.mivot.utils.xml_utils import XmlUtils
+    >>> resource = parse("votable.xml").resources[0]
+    >>> # extract a string serilaization of the mapping block
+    >>> # namespace is purged
+    >>> resource = parse(votable).resources[0]
+    >>> # extract a string serialization of the mapping block
+    >>> # namespace is purged
+    >>> str_mapping_block = (resource.mivot_block.content
+    >>>                      .replace('xmlns="http://www.ivoa.net/xml/mivot"', '')
+    >>>                      .replace("xmlns='http://www.ivoa.net/xml/mivot'", '')
+    >>>                      )    
+    >>> print(str_mapping_block)
+    <VODML>
+      <REPORT status="OK"> hand-made mapping </REPORT>
+      ...
+      <GLOBALS>
+          ...
+      </GLOBALS>
+      <TEMPLATES>
+        <INSTANCE dmtype="mango:EpochPosition">
+          <ATTRIBUTE dmrole="mango:EpochPosition.longitude" dmtype="ivoa:RealQuantity" ref="pos_RA" unit="deg">
+          </ATTRIBUTE>
+             ...
+          </INSTANCE>
+      </TEMPLATES>
+    </VODML>
 
 Level 1: ModelViewerLayer1
 --------------------------
