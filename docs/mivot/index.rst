@@ -26,7 +26,14 @@ Introduction
 
 Usage
 -----
-The API allows you to obtain a model view on the last read data row, this usage corresponds to the layer 3 described below.
+The API allows you to obtain different levels of model views on the last read data row. These levels are described below.
+The lowest levels are model agnostic. 
+
+They provide tools to browse model instances dynamically generated. The understanding of the model elements is the responsability of the final user. 
+
+The highest level (4) is based on the MANGO draft model and especially to its . It has  been designed to solve the EpochPropagation use case risen at 2023 South Spring Interop.
+
+>>>> Tu puex virer cet exemple que se retouvera plus bas dans la definition ds niveaux
 
 .. doctest-remote-data::
     >>> import pyvo
@@ -69,32 +76,38 @@ We implement the epoch propagation by using astropy functions and the data provi
 
 Implementation
 ==============
-The implementation relies on the Astropy's write and read annotation modules (PR#15390),
+The implementation relies on the Astropy's write and read annotation modules (6.0+),
 which allows to get and set Mivot blocks from/into VOTables.
 We use this new Astropy feature, MIVOT, to retrieve the MIVOT block.
 
-This implementation is built in 3 layers, denoting the abstraction level in relation to the XML block.
+This implementation is built in 4 lavels, denoting the abstraction level in relation to the XML block.
 
-Layer 0: ModelViewer
+Level 0: ModelViewer
 --------------------
 Provide the MIVOT block as it is in the VOTable: No references are resolved.
-The Mivot block is provided as an xml tree.
+The Mivot block is provided as an xml tree. This feature is available in Astropy 6.0.
 
-Layer 1: ModelViewerLayer1
+>>> tu peux mettre ici un snippet de code level0
+
+Level 1: ModelViewerLayer1
 --------------------------
 Provide access to an xml tree whose structure matches the model view of the current row.
 The internal references have been resolved. The attribute values have been set with the actual data values.
 This XML element is intended to be used as a basis for building any objects.
 The layer 1 output can be browsed using XPATH queries.
 
-Layer 2: ModelViewerLayer2
+>>> tu peux mettre ici un snippet de code level 1
+
+Level 2: ModelViewerLayer2
 --------------------------
 Just a few methods to make the browsing of the layer 1 output easier.
 The layer 2 API allows users to retrieve MIVOT elements by their @dmrole or @dmtype.
 At this level, the MIVOT block must still be handled as an xml element.
 This module is not completely implemented.
 
-Layer 3: ModelViewerLayer3
+>>> tu peux mettre ici un snippet de code level2
+
+Level 3: ModelViewerLayer3
 --------------------------
 ModelViewerLayer3 generates, from the layer 1 output, a nested dictionary
 representing the entire XML INSTANCE with its hierarchy.
@@ -102,6 +115,12 @@ From this dictionary, we build a :py:class:`pyvo.mivot.viewer.mivot_class.MivotC
 which is a dictionary containing only the essential information used to process data.
 MivotClass basically stores all XML objects in its attribute dictionary :py:attr:`__dict__`.
 
+>>> tu peux mettre ici un snippet de code level3
+
+Level 4: Integrated to ModelViewerLayer3
+----------------------------------------
+This level is an extension of ModelViewerLayer3. It can generate SkypCoord instances from MANGO:EpochPosistion instances and aply to them an epch propagation.
+>>> tu peux mettre ici un snippet de code level4
 
 
 Reference/API
