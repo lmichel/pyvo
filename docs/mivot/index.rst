@@ -129,6 +129,18 @@ The layer 2 API allows users to retrieve MIVOT elements by their @dmrole or @dmt
 At this level, the MIVOT block must still be handled as an xml element.
 This module is not completely implemented.
 
+.. doctest-remote-data::
+    >>> from astropy.io.votable import parse
+    >>> from pyvo.mivot.utils.xml_utils import XmlUtils
+    >>> from pyvo.mivot.viewer.model_viewer import ModelViewer, ModelViewerLayer1
+    >>> m_viewer = ModelViewer("votable.xml")
+    >>> m_viewer.get_next_row() 
+    >>> m_viewer_level2 = ModelViewerLayer1(m_viewer)
+    >>> XmlUtils.pretty_print(m_viewer_level2.get_instance_by_role("coords:PhysicalCoordSys.frame"))
+    <INSTANCE dmrole="coords:PhysicalCoordSys.frame" dmtype="coords:SpaceFrame">
+        <ATTRIBUTE dmrole="coords:SpaceFrame.spaceRefFrame" dmtype="ivoa:string" value="ICRS"/>
+    </INSTANCE>
+    
 Level 3: ModelViewerLayer3
 --------------------------
 ModelViewerLayer3 generates, from the layer 1 output, a nested dictionary
