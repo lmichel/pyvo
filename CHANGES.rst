@@ -42,6 +42,9 @@
 
 - TAP examples now support the continuation property [#483]
 
+- Adding support for the VODataService 1.2 nrows attribute on table
+  elements [#503]
+
 - Introducing the new MIVOT feature, enabling the mapping of
   VOTable data to any model serialized in VO-DML. [#497]
 
