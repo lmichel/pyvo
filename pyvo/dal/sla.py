@@ -71,7 +71,7 @@ class SLAService(DALService):
     """
     a representation of an spectral line catalog (SLA) service
     """
-    def __init__(self, baseurl, session=None):
+    def __init__(self, baseurl, *, capability_description=None, session=None):
         """
         instantiate an SLA service
 
@@ -82,7 +82,7 @@ class SLAService(DALService):
         session : object
            optional session to use for network requests
         """
-        super().__init__(baseurl, session=session)
+        super().__init__(baseurl, capability_description=capability_description, session=session)
 
     def _get_metadata(self):
         """
@@ -98,9 +98,15 @@ class SLAService(DALService):
     def description(self):
         """
         the service description.
-        """
-        self._get_metadata()
 
+        If this is not provided during instantiation, this method will download
+        a sample from the service and read the description in the sample's
+        metadata instead.
+        """
+        if self._description is not None:
+            return self._description
+
+        self._get_metadata()
         try:
             return getattr(self, "_metadata", None).description
         except AttributeError:
@@ -163,7 +169,7 @@ class SLAService(DALService):
         """
         return self.create_query(wavelength, **keywords).execute()
 
-    def create_query(self, wavelength=None, request="queryData", **keywords):
+    def create_query(self, wavelength=None, *, request="queryData", **keywords):
         """
         create a query object that constraints can be added to and then
         executed.  The input arguments will initialize the query with the
@@ -189,7 +195,8 @@ class SLAService(DALService):
         --------
         SLAQuery
         """
-        return SLAQuery(self.baseurl, wavelength, request, session=self._session, **keywords)
+        return SLAQuery(baseurl=self.baseurl, wavelength=wavelength, request=request,
+                        session=self._session, **keywords)
 
     def describe(self):
         print(self.description)
@@ -241,8 +248,7 @@ class SLAQuery(DALQuery):
     """
 
     def __init__(
-            self, baseurl, wavelength=None, request="queryData", session=None,
-            **keywords):
+            self, baseurl, wavelength=None, *, request="queryData", session=None):
         """
         initialize the query object with a baseurl and the given parameters
 
@@ -255,11 +261,6 @@ class SLAQuery(DALQuery):
             assuming meters if unit is not specified.
         session : object
            optional session to use for network requests
-        **keywords :
-            additional parameters can be given via arbitrary
-            case insensitive keyword arguments. Where there is overlap
-            with the parameters set by the other arguments to
-            this function, these keywords will override.
         """
         super().__init__(baseurl, session=session)
 
@@ -342,7 +343,7 @@ class SLAQuery(DALQuery):
         DALFormatError
            for errors parsing the VOTable response
         """
-        return SLAResults(self.execute_votable(), self.queryurl, session=self._session)
+        return SLAResults(self.execute_votable(), url=self.queryurl, session=self._session)
 
 
 class SLAResults(DALResults):

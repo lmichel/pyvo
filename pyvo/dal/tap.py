@@ -63,7 +63,7 @@ def escape(term):
     return str(term).replace("'", "''")
 
 
-def search(url, query, language="ADQL", maxrec=None, uploads=None, **keywords):
+def search(url, query, *, language="ADQL", maxrec=None, uploads=None, **keywords):
     """
     submit a Table Access query that returns rows matching the criteria given.
 
@@ -96,7 +96,7 @@ def search(url, query, language="ADQL", maxrec=None, uploads=None, **keywords):
         an error, including a query syntax error.
     """
     service = TAPService(url)
-    return service.search(query, language, maxrec, uploads, **keywords)
+    return service.search(query, language=language, maxrec=maxrec, uploads=uploads, **keywords)
 
 
 class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
@@ -107,7 +107,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
     _tables = None
     _examples = None
 
-    def __init__(self, baseurl, session=None):
+    def __init__(self, baseurl, *, capability_description=None, session=None):
         """
         instantiate a Table Access Protocol service
 
@@ -118,7 +118,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         session : object
            optional session to use for network requests
         """
-        super().__init__(baseurl, session=session)
+        super().__init__(baseurl, session=session, capability_description=capability_description)
 
         # Check if the session has an update_from_capabilities attribute.
         # This means that the session is aware of IVOA capabilities,
@@ -126,6 +126,20 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         # One such use case for this is auth.
         if hasattr(self._session, 'update_from_capabilities'):
             self._session.update_from_capabilities(self.capabilities)
+
+    def get_tap_capability(self):
+        """
+        returns the (first) TAP capability of this service.
+
+        Returns
+        -------
+        A `~pyvo.io.vosi.tapregext.TableAccess` instance.
+        """
+        for capa in self.capabilities:
+            if isinstance(capa, tr.TableAccess):
+                return capa
+        raise DALServiceError("Invalid TAP service: Does not"
+            " expose a tr:TableAccess capability")
 
     @property
     def tables(self):
@@ -203,9 +217,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
             if the property is not exposed by the service
         """
         try:
-            for capa in self.capabilities:
-                if isinstance(capa, tr.TableAccess):
-                    return capa.outputlimit.default.content
+            return self.get_tap_capability().outputlimit.default.content
         except AttributeError:
             pass
         raise DALServiceError("Default limit not exposed by the service")
@@ -221,9 +233,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
             if the property is not exposed by the service
         """
         try:
-            for capa in self.capabilities:
-                if isinstance(capa, tr.TableAccess):
-                    return capa.outputlimit.hard.content
+            return self.get_tap_capability().outputlimit.hard.content
         except AttributeError:
             pass
         raise DALServiceError("Hard limit not exposed by the service")
@@ -234,14 +244,10 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         a list of upload methods in form of
         :py:class:`~pyvo.io.vosi.tapregext.UploadMethod` objects
         """
-        upload_methods = []
-        for capa in self.capabilities:
-            if isinstance(capa, tr.TableAccess):
-                upload_methods += capa.uploadmethods
-        return upload_methods
+        return self.get_tap_capability().uploadmethods
 
     def run_sync(
-            self, query, language="ADQL", maxrec=None, uploads=None,
+            self, query, *, language="ADQL", maxrec=None, uploads=None,
             **keywords):
         """
         runs sync query and returns its result
@@ -275,7 +281,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
     search = run_sync
 
     def run_async(
-            self, query, language="ADQL", maxrec=None, uploads=None,
+            self, query, *, language="ADQL", maxrec=None, uploads=None,
             **keywords):
         """
         runs async query and returns its result
@@ -312,7 +318,8 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         AsyncTAPJob
         """
         job = AsyncTAPJob.create(
-            self.baseurl, query, language, maxrec, uploads, self._session, **keywords)
+            self.baseurl, query, language=language, maxrec=maxrec, uploads=uploads,
+            session=self._session, **keywords)
         job = job.run().wait()
         job.raise_if_error()
         result = job.fetch_result()
@@ -321,7 +328,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         return result
 
     def submit_job(
-            self, query, language="ADQL", maxrec=None, uploads=None,
+            self, query, *, language="ADQL", maxrec=None, uploads=None,
             **keywords):
         """
         submit a async query without starting it and returns a AsyncTAPJob
@@ -349,10 +356,11 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         AsyncTAPJob
         """
         return AsyncTAPJob.create(
-            self.baseurl, query, language, maxrec, uploads, self._session, **keywords)
+            self.baseurl, query, language=language, maxrec=maxrec, uploads=uploads,
+            session=self._session, **keywords)
 
     def create_query(
-            self, query=None, mode="sync", language="ADQL", maxrec=None,
+            self, query=None, *, mode="sync", language="ADQL", maxrec=None,
             uploads=None, **keywords):
         """
         create a query object that constraints can be added to and then
@@ -377,7 +385,8 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
             a mapping from table names to objects containing a votable.
         """
         return TAPQuery(
-            self.baseurl, query, mode, language, maxrec, uploads, self._session, **keywords)
+            self.baseurl, query, mode=mode, language=language, maxrec=maxrec,
+            uploads=uploads, session=self._session, **keywords)
 
     def get_job(self, job_id):
         """
@@ -400,7 +409,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
                                     decode_content=True)
         return uws.parse_job(response.raw.read)
 
-    def get_job_list(self, phases=None, after=None, last=None,
+    def get_job_list(self, *, phases=None, after=None, last=None,
                      short_description=True):
         """
         lists jobs that the caller can see in the current security context.
@@ -476,7 +485,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
             print()
 
     @prototype_feature('cadc-tb-upload')
-    def create_table(self, name, definition, format='VOSITable'):
+    def create_table(self, name, definition, *, format='VOSITable'):
         """
         Creates a table in the catalog service.
 
@@ -525,7 +534,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         response.raise_for_status()
 
     @prototype_feature('cadc-tb-upload')
-    def load_table(self, name, source, format='tsv'):
+    def load_table(self, name, source, *, format='tsv'):
         """
         Loads content to a table
 
@@ -556,7 +565,7 @@ class TAPService(DALService, AvailabilityMixin, CapabilityMixin):
         response.raise_for_status()
 
     @prototype_feature('cadc-tb-upload')
-    def create_index(self, table_name, column_name, unique=False):
+    def create_index(self, table_name, column_name, *, unique=False):
         """
         Creates a table index in the catalog service.
 
@@ -606,7 +615,7 @@ class AsyncTAPJob:
 
     @classmethod
     def create(
-            cls, baseurl, query, language="ADQL", maxrec=None, uploads=None,
+            cls, baseurl, query, *, language="ADQL", maxrec=None, uploads=None,
             session=None, **keywords):
         """
         creates a async tap job on the server under `baseurl`
@@ -634,7 +643,7 @@ class AsyncTAPJob:
         job = cls(response.url, session=session)
         return job
 
-    def __init__(self, url, session=None):
+    def __init__(self, url, *, session=None):
         """
         initialize the job object with the given url and fetch remote values
 
@@ -911,7 +920,7 @@ class AsyncTAPJob:
 
         return self
 
-    def wait(self, phases=None, timeout=600.):
+    def wait(self, *, phases=None, timeout=600.):
         """
         waits for the job to reach the given phases.
 
@@ -1019,7 +1028,7 @@ class TAPQuery(DALQuery):
     """
 
     def __init__(
-            self, baseurl, query, mode="sync", language="ADQL", maxrec=None,
+            self, baseurl, query, *, mode="sync", language="ADQL", maxrec=None,
             uploads=None, session=None, **keywords):
         """
         initialize the query object with the given parameters
@@ -1070,7 +1079,7 @@ class TAPQuery(DALQuery):
         """
         return '{baseurl}/{mode}'.format(baseurl=self.baseurl, mode=self._mode)
 
-    def execute_stream(self, post=False):
+    def execute_stream(self, *, post=False):
         """
         submit the query and return the raw VOTable XML as a file stream
 
@@ -1105,7 +1114,7 @@ class TAPQuery(DALQuery):
         """
         return TAPResults(self.execute_votable(), url=self.queryurl, session=self._session)
 
-    def submit(self, post=False):
+    def submit(self, *, post=False):
         """
         Does the request part of the TAP query.
         This function is separated from response parsing because async queries

@@ -53,7 +53,7 @@ class DALService:
     endpoint.
     """
 
-    def __init__(self, baseurl, session=None):
+    def __init__(self, baseurl, *, session=None, capability_description=None,):
         """
         instantiate the service connecting it to a base URL
 
@@ -63,8 +63,11 @@ class DALService:
            the base URL that should be used for forming queries to the service.
         session : object
            optional session to use for network requests
+        description : str, optional
+           the description of the service.
         """
         self._baseurl = baseurl
+        self._capability_description = capability_description
         self._session = use_session(session)
 
     @property
@@ -74,6 +77,17 @@ class DALService:
         queries are submitted (read-only)
         """
         return self._baseurl
+
+    @property
+    def capability_description(self):
+        """
+        The service description.
+        """
+        return self._capability_description
+
+    def __repr__(self) -> str:
+        return (f"{type(self).__name__}(baseurl : '{self.baseurl}',"
+                f" description : '{self.capability_description}')")
 
     def search(self, **keywords):
         """
@@ -131,7 +145,7 @@ class DALQuery(dict):
 
     _ex = None
 
-    def __init__(self, baseurl, session=None, **keywords):
+    def __init__(self, baseurl, *, session=None, **keywords):
         """
         initialize the query object with a baseurl
         """
@@ -165,7 +179,7 @@ class DALQuery(dict):
         DALFormatError
            for errors parsing the VOTable response
         """
-        return DALResults(self.execute_votable(), self.queryurl, session=self._session)
+        return DALResults(self.execute_votable(), url=self.queryurl, session=self._session)
 
     def execute_raw(self):
         """
@@ -183,7 +197,7 @@ class DALQuery(dict):
         return out
 
     @stream_decode_content
-    def execute_stream(self, post=False):
+    def execute_stream(self, *, post=False):
         """
         Submit the query and return the raw response as a file stream.
 
@@ -200,7 +214,7 @@ class DALQuery(dict):
         finally:
             return response.raw
 
-    def submit(self, post=False):
+    def submit(self, *, post=False):
         """
         does the actual request
         """
@@ -215,7 +229,7 @@ class DALQuery(dict):
                                          allow_redirects=True)
         return response
 
-    def execute_votable(self, post=False):
+    def execute_votable(self, *, post=False):
         """
         Submit the query and return the results as an AstroPy votable instance.
         As this is the level where qualified error messages are available,
@@ -223,8 +237,8 @@ class DALQuery(dict):
 
         Returns
         -------
-        astropy.io.votable.tree.TableElement
-           an Astropy votable Table instance
+        astropy.io.votable.tree.VOTableFile
+           an Astropy votable object
 
         Raises
         ------
@@ -275,7 +289,7 @@ class DALResults:
         return session.get(result_url, stream=True).raw
 
     @classmethod
-    def from_result_url(cls, result_url, session=None):
+    def from_result_url(cls, result_url, *, session=None):
         """
         Create a result object from a url.
 
@@ -287,7 +301,7 @@ class DALResults:
             url=result_url,
             session=session)
 
-    def __init__(self, votable, url=None, session=None):
+    def __init__(self, votable, *, url=None, session=None):
         """
         initialize the cursor.  This constructor is not typically called
         by directly applications; rather an instance is obtained from calling
@@ -626,7 +640,7 @@ class DALResults:
             yield out
             pos += 1
 
-    def broadcast_samp(self, client_name=None):
+    def broadcast_samp(self, *, client_name=None):
         """
         Broadcast the table to ``client_name`` via SAMP
         """
@@ -652,7 +666,7 @@ class Record(Mapping):
     additional functions for access to service type-specific data.
     """
 
-    def __init__(self, results, index, session=None):
+    def __init__(self, results, index, *, session=None):
         self._results = results
         self._index = index
         self._session = use_session(session)
@@ -790,7 +804,7 @@ class Record(Mapping):
 
         return response.raw
 
-    def cachedataset(self, filename=None, dir=".", timeout=None, bufsize=None):
+    def cachedataset(self, *, filename=None, dir=".", timeout=None, bufsize=None):
         """
         retrieve the dataset described by this record and write it out to
         a file with the given name.  If the file already exists, it will be
@@ -833,7 +847,7 @@ class Record(Mapping):
             bufsize = 524288
 
         if not filename:
-            filename = self.make_dataset_filename(dir)
+            filename = self.make_dataset_filename(dir=dir)
 
         inp = self.getdataset(timeout)
         try:
@@ -844,7 +858,7 @@ class Record(Mapping):
 
     _dsname_no = 0  # used by make_dataset_filename
 
-    def make_dataset_filename(self, dir=".", base=None, ext=None):
+    def make_dataset_filename(self, *, dir=".", base=None, ext=None):
         """
         create a viable pathname in a given directory for saving the dataset
         available via getdataset().  The pathname that is returned is
@@ -878,7 +892,7 @@ class Record(Mapping):
         if not base:
             base = self.suggest_dataset_basename()
         if not ext:
-            ext = self.suggest_extension("dat")
+            ext = self.suggest_extension(default="dat")
 
         # be efficient when writing a bunch of files into the same directory
         # in succession
@@ -916,7 +930,7 @@ class Record(Mapping):
         # abstract; specialized for the different service types
         return "dataset"
 
-    def suggest_extension(self, default=None):
+    def suggest_extension(self, *, default=None):
         """
         returns a recommended filename extension for the dataset described
         by this record.  Typically, this would look at the column describing

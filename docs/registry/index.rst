@@ -130,7 +130,7 @@ you would say:
   ...                             registry.Freetext("supernova"))
 
 After that, ``resources`` is an instance of
-:py:class:`pyvo.registry.RegistryResults`, which you can iterate over.  In
+:py:class:`pyvo.registry.regtap.RegistryResults`, which you can iterate over.  In
 interactive data discovery, however, it is usually preferable to use the
 ``to_table`` method for an overview of the resources available:
 
@@ -155,9 +155,9 @@ And to look for tap resources *in* a specific cone, you would do
   ...                 registry.Spatial((SkyCoord("23d +3d"), 3), intersect="enclosed"),
   ...                 includeaux=True) # doctest: +IGNORE_OUTPUT
   <DALResultsTable length=1>
-              ivoid                   res_type       short_name                   res_title                  ...  intf_types  intf_roles          alt_identifier         
-                                                                                                             ...                                                         
-              object                   object          object                       object                   ...    object      object                object             
+              ivoid                   res_type       short_name                   res_title                  ...  intf_types  intf_roles          alt_identifier
+                                                                                                             ...
+              object                   object          object                       object                   ...    object      object                object
   ------------------------------ ----------------- ------------- ------------------------------------------- ... ------------ ---------- --------------------------------
   ivo://cds.vizier/j/apj/835/123 vs:catalogservice J/ApJ/835/123 Globular clusters in NGC 474 from CFHT obs. ... vs:paramhttp        std doi:10.26093/cds/vizier.18350123
 
@@ -183,20 +183,48 @@ are not), but it is rather clunky, and in the real VO short name
 collisions should be very rare.
 
 Use the ``get_service`` method of
-:py:class:`pyvo.registry.RegistryResource` to obtain a DAL service
+:py:class:`pyvo.registry.regtap.RegistryResource` to obtain a DAL service
 object for a particular sort of interface.
 To query the fourth match using simple cone search, you would
 thus say:
 
 .. doctest-remote-data::
 
-  >>> resources["II/283"].get_service("conesearch").search(pos=(120, 73), sr=1)
+  >>> voresource = resources["II/283"]
+  >>> voresource.get_service(service_type="conesearch").search(pos=(120, 73), sr=1)
   <DALResultsTable length=1>
     _RAJ2000     _DEJ2000      _r    recno ... NED    RAJ2000      DEJ2000
       deg          deg                     ...
     float64      float64    float64  int32 ... str3    str12        str12
   ------------ ------------ -------- ----- ... ---- ------------ ------------
   117.98645833  73.00961111 0.588592   986 ...  NED 07 51 56.750 +73 00 34.60
+
+This method will raise an error if there is more than one service of the desired
+type. If you know for sure that all declared conesearch will be the same, you can
+safely use ``get_service(service_type='conesearch', lax=True)`` that will return
+the first conesearch it finds. 
+
+However some providers provide multiple services of the same type
+-- for example in VizieR you'll find one conesearch per table.
+In this case, you can inspect the available services with
+`~pyvo.registry.RegistryResource.list_services`. Then, you can refine your
+instructions to `~pyvo.registry.RegistryResource.get_service` with a keyword
+constraint on the description ``get_service(service_type='conesearch', keyword='sncat')``.
+
+.. doctest-remote-data::
+
+  >>> for service in voresource.list_services():
+  ...     print(service)
+  TAPService(baseurl : 'http://tapvizier.cds.unistra.fr/TAPVizieR/tap', description : '')
+  BrowserService(baseurl : 'http://vizier.cds.unistra.fr/viz-bin/VizieR-2?-source=II/283', description : 'None')
+  SCSService(baseurl : 'http://vizier.cds.unistra.fr/viz-bin/conesearch/II/283/sncat?', description : 'Cone search capability for table II/283/sncat (List of SNe arranged in chronological order)')
+
+Or to get the list of services corresponding to a specific service type:
+
+.. doctest-remote-data::
+
+  >>> voresource.list_services("tap")
+  [TAPService(baseurl : 'http://tapvizier.cds.unistra.fr/TAPVizieR/tap', description : '')]
 
 To operate TAP services, you need to know what tables make up a
 resource; you could construct a TAP service and access its ``tables``
@@ -216,7 +244,7 @@ To run a TAP query based on this metadata, do something like:
 
 .. doctest-remote-data::
 
-  >>> resources["II/283"].get_service("tap#aux").run_sync(
+  >>> resources["II/283"].get_service(service_type="tap#aux").run_sync(
   ...   'SELECT sn, z FROM "J/A+A/437/789/table2" WHERE z>0.04')
   <DALResultsTable length=4>
     SN      z
@@ -235,7 +263,7 @@ with the query facility (this uses python's ``webbrowser`` module):
 
 .. doctest-skip::
 
-  >>> resources["II/283"].get_service("web").search()  # doctest: +IGNORE_OUTPUT
+  >>> resources["II/283"].get_service(service_type="web").search()  # doctest: +IGNORE_OUTPUT
 
 Note that for interactive data discovery in the VO Registry, you may
 also want to have a look at Aladin's discovery tree, TOPCAT's VO menu,
@@ -465,7 +493,7 @@ registry.
 
 .. doctest-remote-data::
 
-  >>> nvss = vo.registry.search(ivoid='ivo://nasa.heasarc/skyview/nvss')[0].get_service('sia')
+  >>> nvss = vo.registry.search(ivoid='ivo://nasa.heasarc/skyview/nvss')[0].get_service(service_type='sia')
   >>> nvss.search(pos=(350.85, 58.815),size=0.25,format="image/fits")
   <DALResultsTable length=1>
   Survey    Ra   ... LogicalName
@@ -488,8 +516,8 @@ two special capabilities that pyVO cannot produce services for (mainly
 because standalone service objects do not make much sense for them).
 
 To obtain a service for one of the access modes pyVO does support, use
-``get_service(mode)``.  For ``web``, this returns an object that opens a
-web browser window when its ``query`` method is called.
+``get_service(service_type=mode)``.  For ``web``, this returns an object
+that opens a web browser window when its ``query`` method is called.
 
 RegistryResources also have a ``get_contact`` method.  Use this if the
 service is down or seems to have bugs; you should in general get at
@@ -511,6 +539,44 @@ and then you can run:
 
   >>> res.get_tables()  # doctest: +IGNORE_OUTPUT
   {'flashheros.data': <VODataServiceTable name="flashheros.data">... 29 columns ...</VODataServiceTable>, 'ivoa.obscore': <VODataServiceTable name="ivoa.obscore">... 0 columns ...</VODataServiceTable>}
+
+
+Alternative Registries
+======================
+
+There are several RegTAP services in the VO.  PyVO by default uses the
+one at the TAP access URL http://reg.g-vo.org/tap.  You can use
+alternative ones, for instance, because they are nearer to you or
+because the default endpoint is down.
+
+You can pre-select the URL by setting the ``IVOA_REGISTRY`` environment
+variable to the TAP access URL of the service you would like to use.  In
+a bash-like shell, you would say::
+
+  export IVOA_REGISTRY="http://vao.stsci.edu/RegTAP/TapService.aspx"
+
+before starting python (or the notebook processor).
+
+Within a Python session, you can use the
+`pyvo.registry.choose_RegTAP_service` function, which also takes the
+TAP access URL.
+
+As long as you have on working registry endpoint, you can find the other
+RegTAP services using:
+
+.. We probably shouldn't test the result of the next code block; this
+   will change every time someone registers a new RegTAP service...
+
+.. doctest-remote-data::
+
+  >>> res = registry.search(datamodel="regtap")
+  >>> print("\n".join(sorted(r.get_interface(service_type="tap", lax=True).access_url
+  ...   for r in res)))
+  http://dc.zah.uni-heidelberg.de/tap
+  http://gavo.aip.de/tap
+  http://voparis-rr.obspm.fr/tap
+  https://vao.stsci.edu/RegTAP/TapService.aspx
+
 
 
 Reference/API
@@ -543,7 +609,7 @@ run all-VO queries without reading at least this sentence)::
               datamodel="obscore", servicetype="tap"):
           print("Querying {}".format(svc_rec.res_title))
           try:
-              svc = svc_rec.get_service("tap")
+              svc = svc_rec.get_service(service_type="tap", lax=True)
               results.append(
                   svc.run_sync(QUERY).to_table())
           except KeyboardInterrupt:

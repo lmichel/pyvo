@@ -102,7 +102,7 @@ def __getattr__(name):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def search(url, pos=None, band=None, time=None, pol=None,
+def search(url, pos=None, *, band=None, time=None, pol=None,
            field_of_view=None, spatial_resolution=None,
            spectral_resolving_power=None, exptime=None,
            timeres=None, publisher_did=None, facility=None, collection=None,
@@ -156,7 +156,7 @@ class SIA2Service(DALService, AvailabilityMixin, CapabilityMixin):
     generally not notice that, though.
     """
 
-    def __init__(self, baseurl, session=None, check_baseurl=True):
+    def __init__(self, baseurl, *, capability_description=None, session=None, check_baseurl=True):
         """
         instantiate an SIA2 service
 
@@ -171,7 +171,7 @@ class SIA2Service(DALService, AvailabilityMixin, CapabilityMixin):
            query end point, False - baseurl is the query end point
         """
 
-        super().__init__(baseurl, session=session)
+        super().__init__(baseurl, capability_description=capability_description, session=session)
 
         # Check if the session has an update_from_capabilities attribute.
         # This means that the session is aware of IVOA capabilities,
@@ -198,7 +198,7 @@ class SIA2Service(DALService, AvailabilityMixin, CapabilityMixin):
                         continue
                     break
 
-    def search(self, pos=None, band=None, time=None, pol=None,
+    def search(self, pos=None, *, band=None, time=None, pol=None,
                field_of_view=None, spatial_resolution=None,
                spectral_resolving_power=None, exptime=None,
                timeres=None, publisher_did=None, facility=None, collection=None,
@@ -232,7 +232,7 @@ class SIA2Query(DALQuery, AxisParamMixin):
     used to interact with SIA2 services.
     """
 
-    def __init__(self, url, pos=None, band=None, time=None, pol=None,
+    def __init__(self, url, pos=None, *, band=None, time=None, pol=None,
                  field_of_view=None, spatial_resolution=None,
                  spectral_resolving_power=None, exptime=None,
                  timeres=None, publisher_did=None,

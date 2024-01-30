@@ -33,7 +33,7 @@ from .adhoc import DatalinkResultsMixin, DatalinkRecordMixin
 __all__ = ["search", "SCSService", "SCSQuery", "SCSResults", "SCSRecord"]
 
 
-def search(url, pos, radius=1.0, verbosity=2, **keywords):
+def search(url, pos, *, radius=1.0, verbosity=2, **keywords):
     """
     submit a simple Cone Search query that requests objects or observations
     whose positions fall within some distance from a search position.
@@ -79,7 +79,7 @@ def search(url, pos, radius=1.0, verbosity=2, **keywords):
     pyvo.dal.query.DALServiceError
     pyvo.dal.query.DALQueryError
     """
-    return SCSService(url).search(pos, radius, verbosity, **keywords)
+    return SCSService(url).search(pos=pos, radius=radius, verbosity=verbosity, **keywords)
 
 
 class SCSService(DALService):
@@ -87,7 +87,7 @@ class SCSService(DALService):
     a representation of a Cone Search service
     """
 
-    def __init__(self, baseurl, session=None):
+    def __init__(self, baseurl, *, capability_description=None, session=None):
         """
         instantiate a Cone Search service
 
@@ -98,7 +98,7 @@ class SCSService(DALService):
         session : object
            optional session to use for network requests
         """
-        super().__init__(baseurl, session=session)
+        super().__init__(baseurl, capability_description=capability_description, session=session)
 
     def _get_metadata(self):
         """
@@ -116,7 +116,6 @@ class SCSService(DALService):
         the service description.
         """
         self._get_metadata()
-
         try:
             return getattr(self, '_metadata').description
         except AttributeError:
@@ -139,7 +138,7 @@ class SCSService(DALService):
         except AttributeError:
             return []
 
-    def search(self, pos, radius=1.0, verbosity=2, **keywords):
+    def search(self, pos, *, radius=1.0, verbosity=2, **keywords):
         """
         submit a simple Cone Search query that requests objects or observations
         whose positions fall within some distance from a search position.
@@ -184,9 +183,9 @@ class SCSService(DALService):
         pyvo.dal.query.DALServiceError
         pyvo.dal.query.DALQueryError
         """
-        return self.create_query(pos, radius, verbosity, **keywords).execute()
+        return self.create_query(pos=pos, radius=radius, verbosity=verbosity, **keywords).execute()
 
-    def create_query(self, pos=None, radius=None, verbosity=None, **keywords):
+    def create_query(self, pos=None, *, radius=None, verbosity=None, **keywords):
         """
         create a query object that constraints can be added to and then
         executed.  The input arguments will initialize the query with the
@@ -222,7 +221,8 @@ class SCSService(DALService):
         --------
         SCSQuery
         """
-        return SCSQuery(self.baseurl, pos, radius, verbosity, session=self._session, **keywords)
+        return SCSQuery(self.baseurl, pos=pos, radius=radius, verbosity=verbosity,
+                        session=self._session, **keywords)
 
     def describe(self):
         print(self.description)
@@ -274,7 +274,7 @@ class SCSQuery(DALQuery):
     """
 
     def __init__(
-            self, baseurl, pos=None, radius=None, verbosity=None, session=None, **keywords):
+            self, baseurl, pos=None, *, radius=None, verbosity=None, session=None, **keywords):
         """
         initialize the query object with a baseurl and the given parameters
 

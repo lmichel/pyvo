@@ -50,7 +50,7 @@ __all__ = ["search", "SSAService", "SSAQuery", "SSAResults", "SSARecord"]
 
 
 def search(
-        baseurl, pos=None, diameter=None, band=None, time=None, format=None,
+        baseurl, pos=None, *, diameter=None, band=None, time=None, format=None,
         **keywords):
     """
     submit a simple SSA query that requests spectra overlapping a given region
@@ -102,15 +102,14 @@ def search(
     pyvo.dal.query.DALQueryError
     """
     return SSAService(baseurl).search(
-        pos, diameter, band, time, format, **keywords)
+        pos=pos, diameter=diameter, band=band, time=time, format=format, **keywords)
 
 
 class SSAService(DALService):
     """
     a representation of an SSA service
     """
-
-    def __init__(self, baseurl, session=None):
+    def __init__(self, baseurl, *, capability_description=None, session=None):
         """
         instantiate an SSA service
 
@@ -119,7 +118,7 @@ class SSAService(DALService):
         baseurl : str
            the base URL for submitting search queries to the service.
         """
-        super().__init__(baseurl, session=session)
+        super().__init__(baseurl, session=session, capability_description=capability_description)
 
     def _get_metadata(self):
         """
@@ -137,7 +136,6 @@ class SSAService(DALService):
         the service description.
         """
         self._get_metadata()
-
         try:
             return getattr(self, "_metadata", None).description
         except AttributeError:
@@ -161,7 +159,7 @@ class SSAService(DALService):
             return []
 
     def search(
-            self, pos=None, diameter=None, band=None, time=None, format=None,
+            self, pos=None, *, diameter=None, band=None, time=None, format=None,
             **keywords):
         """
         submit a SSA query to this service with the given constraints.
@@ -211,10 +209,10 @@ class SSAService(DALService):
         pyvo.dal.query.DALQueryError
         """
         return self.create_query(
-            pos, diameter, band, time, format, **keywords).execute()
+            pos=pos, diameter=diameter, band=band, time=time, format=format, **keywords).execute()
 
     def create_query(
-            self, pos=None, diameter=None, band=None, time=None, format=None,
+            self, pos=None, *, diameter=None, band=None, time=None, format=None,
             request="queryData", **keywords):
         """
         create a query object that constraints can be added to and then
@@ -257,7 +255,7 @@ class SSAService(DALService):
         SSAQuery
         """
         return SSAQuery(
-            self.baseurl, pos, diameter, band, time, format, request,
+            self.baseurl, pos=pos, diameter=diameter, band=band, time=time, format=format, request=request,
             session=self._session, **keywords)
 
     def describe(self):
@@ -309,7 +307,7 @@ class SSAQuery(DALQuery):
     """
 
     def __init__(
-            self, baseurl, pos=None, diameter=None, band=None, time=None,
+            self, baseurl, pos=None, *, diameter=None, band=None, time=None,
             format=None, request="queryData", session=None, **keywords):
         """
         initialize the query object with a baseurl and the given parameters
@@ -755,7 +753,7 @@ class SSARecord(SodaRecordMixin, DatalinkRecordMixin, Record):
             out = re.sub(r'\s+', '_', out.strip())
         return out
 
-    def suggest_extension(self, default=None):
+    def suggest_extension(self, *, default=None):
         """
         returns a recommended filename extension for the dataset described
         by this record.  Typically, this would look at the column describing
@@ -763,7 +761,7 @@ class SSARecord(SodaRecordMixin, DatalinkRecordMixin, Record):
         """
         return mime2extension(self.format, default)
 
-    def broadcast_samp(self, client_name=None):
+    def broadcast_samp(self, *, client_name=None):
         """
         Broadcast the spectrum to ``client_name`` via SAMP
         """
