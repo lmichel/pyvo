@@ -51,7 +51,7 @@ class ModelViewerLevel1:
 
         Parameters
         ----------
-        votable_path : str
+        votable_path : str or DALResults instance
             VOTable that will be parsed with the parser of Astropy,
             which extracts the annotation block.
         tableref : str, optional
