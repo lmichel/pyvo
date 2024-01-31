@@ -51,7 +51,7 @@ class ModelViewerLevel1:
 
         Parameters
         ----------
-        votable_path : str
+        votable_path : str or DALResults instance
             VOTable that will be parsed with the parser of Astropy,
             which extracts the annotation block.
         tableref : str, optional
@@ -296,7 +296,7 @@ class ModelViewerLevel1:
 
     def get_first_instance(self, tableref=None):
         """
-        Return the head INSTANCE (first TEMPLATES child).
+        Return the dmtype of the head INSTANCE (first TEMPLATES child).
         If no INSTANCE is found, take the first COLLECTION.
 
         Parameters
