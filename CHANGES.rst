@@ -17,7 +17,9 @@ Enhancements and Fixes
 
 - Making optional parameters keyword only throughout the public API. [#507]
 
-
+- Add a ``MIVOT`` feature that allows to process the EPOCH propagation for VOTables annotated with ``MIVOT``.
+  This module automatically builds ``SkyCoo`` instances without having to do any column-by-column analysis. [#497]
+  
 Deprecations and Removals
 -------------------------
 
