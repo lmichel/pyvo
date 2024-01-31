@@ -16,10 +16,13 @@ Enhancements and Fixes
 - Make ``lax`` parameter default to False in registry get_service method [#505]
 
 - Making optional parameters keyword only throughout the public API. [#507]
+  
+- registry.Ivoid now accepts multiple ivoids and will then match any of
+  them. [#517]
 
 - Add a ``MIVOT`` feature that allows to process the EPOCH propagation for VOTables annotated with ``MIVOT``.
   This module automatically builds ``SkyCoo`` instances without having to do any column-by-column analysis. [#497]
-  
+
 Deprecations and Removals
 -------------------------
 
