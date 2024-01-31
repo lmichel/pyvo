@@ -296,7 +296,7 @@ class ModelViewerLevel1:
 
     def get_first_instance(self, tableref=None):
         """
-        Return the head INSTANCE (first TEMPLATES child).
+        Return the dmtype of the head INSTANCE (first TEMPLATES child).
         If no INSTANCE is found, take the first COLLECTION.
 
         Parameters
