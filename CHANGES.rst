@@ -20,8 +20,9 @@ Enhancements and Fixes
 - registry.Ivoid now accepts multiple ivoids and will then match any of
   them. [#517]
 
-- Add a ``MIVOT`` feature that allows to process the EPOCH propagation for VOTables annotated with ``MIVOT``.
-  This module automatically builds ``SkyCoo`` instances without having to do any column-by-column analysis. [#497]
+ - Introducing the new MIVOT feature, enabling processed VOTable data mapped to any model serialized in VO-DML.
+   In particular, the ``MIVOT`` feature  allows to process the epoch propagation for VOTables annotated with ``MANGO`` classes.
+   This module automatically builds ``SkyCoo`` instances without having to do any column-by-column analysis. [#497]
 
 Deprecations and Removals
 -------------------------
@@ -103,10 +104,6 @@ Deprecations and Removals
 
 - Adding support for the VODataService 1.2 nrows attribute on table
   elements [#503]
-
-- Introducing the new MIVOT feature, enabling the mapping of
-  VOTable data to any model serialized in VO-DML. [#497]
-
 
 1.4.3 (unreleased)
 ==================
