@@ -25,9 +25,9 @@ from astropy.time import Time
 from pyvo.mivot.viewer.model_viewer_level1 import ModelViewerLevel1
 from pyvo.mivot.utils.exceptions import ResolveException
 
-if check_astropy_version() is False:
+try:
     from erfa import ErfaWarning
-else:
+except Exception:
     from astropy.utils.exceptions import ErfaWarning
 @pytest.fixture
 def data_path():
