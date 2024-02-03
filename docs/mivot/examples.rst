@@ -66,15 +66,15 @@ due to the fact that no distance is provided to ``SkyCoord``. This is worked aro
     >>> from pyvo.mivot.utils.dict_utils import DictUtils
     >>> from pyvo.mivot.utils.xml_utils import XmlUtils
     ... # Ignore the warnings emited by the Erfa package while computing the epoch propagation
-    >>> if not sys.warnoptions:
-    >>>     import warnings
-    >>>     warnings.simplefilter("ignore")
+    >>> if not sys.warnoptions: # doctest: +SKIP
+    >>>     import warnings # doctest: +SKIP
+    >>>     warnings.simplefilter("ignore") # doctest: +SKIP
     >>> scs_srv = SCSService('http://viz-beta.u-strasbg.fr/viz-bin/mivotconesearch/I/329/urat1') # doctest: +SKIP
     >>> m_viewer = ModelViewerLevel1( # doctest: +SKIP
     >>> scs_srv.search(
-    ...        pos=SkyCoord(ra=52.26708*u.degree, dec=59.94027*u.degree, frame='icrs'),
-    ...        radius=0.05)
-    ...    ) # doctest: +SKIP
+    ...     pos=SkyCoord(ra=52.26708*u.degree, dec=59.94027*u.degree, frame='icrs'),
+    ...     radius=0.05)
+    ...     ) # doctest: +SKIP
 
 Level1: Get the XML Representation of the Model Instances
 =========================================================
