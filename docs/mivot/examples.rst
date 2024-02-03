@@ -75,7 +75,7 @@ due to the fact that no distance is provided to ``SkyCoord``. This is worked aro
     scs_srv.search(
         pos=SkyCoord(ra=52.26708*u.degree, dec=59.94027*u.degree, frame='icrs'),
         radius=0.05)
-        ) 
+        )
 
 Level1: Get the XML Representation of the Model Instances
 =========================================================
