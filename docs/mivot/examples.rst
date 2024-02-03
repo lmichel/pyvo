@@ -56,25 +56,26 @@ The code below is a basic ``PyVO`` script that runs a cone-search query.
 It is to be noted the that the epoch propagation computation (`apply_space_motion`) raises a warning 
 due to the fact that no distance is provided to ``SkyCoord``. This is worked around by the warning filter.
 
-.. doctest-remote-data::
+.. code-block:: python
    :caption: PyVO code running a query on the Vizier cone-search
-    >>> import sys
-    >>> from pyvo.dal.scs import  SCSService
-    >>> from astropy.coordinates import SkyCoord
-    >>> import astropy.units as u
-    >>> from pyvo.mivot.viewer.model_viewer_level1 import ModelViewerLevel1
-    >>> from pyvo.mivot.utils.dict_utils import DictUtils
-    >>> from pyvo.mivot.utils.xml_utils import XmlUtils
-    ... # Ignore the warnings emited by the Erfa package while computing the epoch propagation
-    >>> if not sys.warnoptions: # doctest: +SKIP
-    ...     import warnings # doctest: +SKIP
-    ...     warnings.simplefilter("ignore") # doctest: +SKIP
-    >>> scs_srv = SCSService('http://viz-beta.u-strasbg.fr/viz-bin/mivotconesearch/I/329/urat1') # doctest: +SKIP
-    >>> m_viewer = ModelViewerLevel1( # doctest: +SKIP
-    >>> scs_srv.search(
-    ...     pos=SkyCoord(ra=52.26708*u.degree, dec=59.94027*u.degree, frame='icrs'),
-    ...     radius=0.05)
-    ...     ) # doctest: +SKIP
+   
+    import sys
+    from pyvo.dal.scs import  SCSService
+    from astropy.coordinates import SkyCoord
+    import astropy.units as u
+    from pyvo.mivot.viewer.model_viewer_level1 import ModelViewerLevel1
+    from pyvo.mivot.utils.dict_utils import DictUtils
+    from pyvo.mivot.utils.xml_utils import XmlUtils
+    # Ignore the warnings emited by the Erfa package while computing the epoch propagation
+    if not sys.warnoptions: 
+        import warnings # doctest: +SKIP
+        warnings.simplefilter("ignore")
+    scs_srv = SCSService('http://viz-beta.u-strasbg.fr/viz-bin/mivotconesearch/I/329/urat1') # doctest: +SKIP
+    m_viewer = ModelViewerLevel1( 
+    scs_srv.search(
+        pos=SkyCoord(ra=52.26708*u.degree, dec=59.94027*u.degree, frame='icrs'),
+        radius=0.05)
+        ) 
 
 Level1: Get the XML Representation of the Model Instances
 =========================================================
