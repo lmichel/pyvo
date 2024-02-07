@@ -35,10 +35,11 @@ def test_id_table(rseeker, data_path):
 
     assert rseeker.get_table_ids() == ['_PKTable', 'Results']
 
-    assert rseeker.get_id_index_mapping('_PKTable') == {
-         'pksrcid': {'ID': '_pksrcid', 'indx': 0},
-         'pkband': {'ID': '_pkband', 'indx': 1}
-         }
+    assert (rseeker.get_id_index_mapping('_PKTable')
+            == {'pksrcid': {'ID': '_pksrcid', 'indx': 0},
+                'pkband': {'ID': '_pkband', 'indx': 1}
+                }
+            )
     assert (rseeker.get_id_index_mapping('Results')
             == {'source_id': {'ID': '_srcid', 'indx': 0},
                 'transit_id': {'ID': 'transit_id', 'indx': 1},
@@ -58,11 +59,11 @@ def test_id_table(rseeker, data_path):
 
     for field in table.fields:
         field.ID = None
-    assert rseeker.get_id_index_mapping('_PKTable') == {
-        'pksrcid': {'indx': 0, 'ID': 'pksrcid'},
-        'pkband': {'indx': 1, 'ID': 'pkband'}
-        }
-
+    assert (rseeker.get_id_index_mapping('_PKTable')
+            == {'pksrcid': {'indx': 0, 'ID': 'pksrcid'},
+                'pkband': {'indx': 1, 'ID': 'pkband'}
+                }
+            )
 
     for table in rseeker._resource.tables:
         table.ID = None
@@ -71,10 +72,12 @@ def test_id_table(rseeker, data_path):
     for table in rseeker._resource.tables:
         table.name = "any_name"
     assert rseeker.get_table_ids() == ['any_name', 'any_name']
-    assert rseeker.get_id_index_mapping('any_name') == {
-        'pksrcid': {'indx': 0, 'ID': 'pksrcid'},
-        'pkband': {'indx': 1, 'ID': 'pkband'}
-        }
+    assert (rseeker.get_id_index_mapping('any_name')
+            == {'pksrcid': {'indx': 0, 'ID': 'pksrcid'},
+                'pkband': {'indx': 1, 'ID': 'pkband'}
+                }
+            )
+
 
 @pytest.fixture
 def data_path():

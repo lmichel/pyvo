@@ -3,7 +3,6 @@ Class used to resolve each static REFERENCE found in instance.
 """
 from copy import deepcopy
 from pyvo.mivot.utils.exceptions import ResolveException, NotImplementedException
-from pyvo.mivot.utils.xml_utils import XmlUtils
 from pyvo.mivot.utils.xpath_utils import XPath
 from pyvo.utils.prototype import prototype_feature
 

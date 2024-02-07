@@ -7,7 +7,7 @@
     Date: 2024-01-26T14:37:03 [V7.33.1]
    Explanations and Statistics of UCDs:			See LINK below
    In case of problem, please report to:	cds-question@unistra.fr
-   
+
    This output has been shortened for the PyVO test purpose
  </DESCRIPTION>
 <!-- VOTable description at http://www.ivoa.net/Documents/latest/VOT.html -->
@@ -21,7 +21,7 @@ Constraint -out.meta=dhuM</INFO>
 
 <RESOURCE ID="yCat_1329" name="I/329">
   <DESCRIPTION>URAT1 Catalog (Zacharias+ 2015)</DESCRIPTION>  <INFO name="ivoid" value="ivo://cds.vizier/i/329">    IVOID of underlying data collection  </INFO>
-  
+
   <COOSYS ID="H" system="ICRS"/>
   <TIMESYS ID="time_1" refposition="UNKNOWN" timeorigin="0.000000" timescale="UNKNOWN"/>
 <RESOURCE type='meta'><VODML xmlns="http://www.ivoa.net/xml/mivot">
