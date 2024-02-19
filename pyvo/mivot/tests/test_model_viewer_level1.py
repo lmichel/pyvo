@@ -122,7 +122,7 @@ def m_viewer(data_path, data_sample_url):
     yield ModelViewerLevel1(votable_path=votable_path)
     os.remove(votable_path)
 
-    
+
 @pytest.fixture
 def path_to_test_1(data_path, data_sample_url):
     if check_astropy_version() is False:

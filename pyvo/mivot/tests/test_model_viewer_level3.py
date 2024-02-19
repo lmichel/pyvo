@@ -12,6 +12,7 @@ from pyvo.utils.prototype import activate_features
 
 activate_features('MIVOT')
 
+
 @pytest.mark.remote_data
 def test_model_viewer3(votable_test, simple_votable):
     """

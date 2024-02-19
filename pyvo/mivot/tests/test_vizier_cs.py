@@ -21,11 +21,6 @@ from pyvo.mivot.version_checker import check_astropy_version
 from pyvo.mivot.viewer.model_viewer_level1 import ModelViewerLevel1
 from pyvo.mivot.utils.exceptions import ResolveException
 
-try:
-    from erfa import ErfaWarning
-except Exception:
-    from astropy.utils.exceptions import ErfaWarning
-
 
 @pytest.fixture
 def data_path():
@@ -95,7 +90,7 @@ def test_with_name(path_to_withname, delt_coo):
 
     m_viewer = ModelViewerLevel1(votable_path=path_to_withname)
     mivot_object = m_viewer.get_next_row_view()
-    
+
     assert abs(mivot_object.longitude.value - 52.2340018) < delt_coo
     assert abs(mivot_object.latitude.value - 59.8937333) < delt_coo
     assert abs(mivot_object.pmLongitude.value - 1.5) < delt_coo
