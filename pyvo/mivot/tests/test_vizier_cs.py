@@ -3,7 +3,6 @@ The first service in operato the annotates query responses in the fly is Vizier
 https://cds/viz-bin/mivotconesearch/VizierParams
 Data are mapped o the EPochPropagtion model as it is implemented in the current code.
 This test case is based on 2 VOTables:
-<<<<<<< HEAD
 - The Vizier native (vizier_cs_withname.xml) where all ATTRIBUTE@ref are
   based on FIELD@name even when a field has an ID.
 - The patched vizier (vizier_cs_withid.xml) where all ATTRIBUTE@ref are
@@ -12,17 +11,6 @@ The test checks that:
 - The position fields can be retrieved through the mapping.
 - Both cases give the same results
 A third test checks the case where
-=======
-- The Vizier native (vizier_cs_withname.xml) where
-  all ATTRIBUTE@ref are based on FIELD@name even when a field has an ID.
-- The patched vizier (vizier_cs_withid.xml) where
-  all ATTRIBUTE@ref are based on FIELD@name or FIELD@name if it exists.
-
-The test checks that:
-- The position fields can be retrieved through the mapping.
-- Both cases give the same results
-
->>>>>>> lmichel/feature_mivot
 Created on 26 janv. 2024
 @author: michel
 '''

@@ -99,10 +99,7 @@ class ResourceSeeker(object):
                 field_desc["ID"] = field.name
             retour[field.name] = field_desc
             indx += 1
-<<<<<<< HEAD
-=======
 
->>>>>>> lmichel/feature_mivot
         return retour
 
     def get_id_unit_mapping(self, table_name):
