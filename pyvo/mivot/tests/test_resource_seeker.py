@@ -43,6 +43,7 @@ def test_id_table(rseeker):
     if check_astropy_version() is False:
         pytest.skip("MIVOT test skipped because of the astropy version.")
     assert rseeker.get_table_ids() == ['_PKTable', 'Results']
+
     assert (rseeker.get_id_index_mapping('_PKTable')
             == {'pksrcid': {'ID': '_pksrcid', 'indx': 0},
                 'pkband': {'ID': '_pkband', 'indx': 1}
