@@ -50,13 +50,16 @@ def m_viewer(data_path, data_sample_url):
     yield ModelViewerLevel1(votable_path=votable_path, tableref="Results")
     os.remove(votable_path)
 
+
 @pytest.fixture
 def data_path():
     return os.path.dirname(os.path.realpath(__file__))
 
+
 @pytest.fixture
 def data_sample_url():
     return "https://raw.githubusercontent.com/ivoa/dm-usecases/main/pyvo-ci-sample/"
+
 
 if __name__ == '__main__':
     pytest.main()

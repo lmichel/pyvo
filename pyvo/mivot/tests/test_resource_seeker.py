@@ -13,7 +13,6 @@ from pyvo.utils import activate_features
 activate_features('MIVOT')
 
 
-
 @pytest.fixture
 def rseeker(data_path, data_sample_url):
     if check_astropy_version() is False:
@@ -24,10 +23,10 @@ def rseeker(data_path, data_sample_url):
     urlretrieve(data_sample_url + votable_name,
                 votable_path)
     votable = parse(votable_path)
-    rseeker = None
     for resource in votable.resources:
         yield ResourceSeeker(resource)
-    #os.remove(votable_path)
+    os.remove(votable_path)
+
 
 @pytest.fixture
 def data_sample_url():

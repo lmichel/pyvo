@@ -20,7 +20,7 @@ activate_features('MIVOT')
 
 
 @pytest.fixture
-def a_seeker(data_path, data_sample_url):    
+def a_seeker(data_path, data_sample_url):   
     if check_astropy_version() is False:
         pytest.skip("MIVOT test skipped because of the astropy version.")
 

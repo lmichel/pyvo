@@ -1,5 +1,5 @@
 '''
-The first service in operato the annotates query responses in the fly is Vizier
+The first service in operation the annotates query responses in the fly is Vizier
 https://cds/viz-bin/mivotconesearch/VizierParams
 Data are mapped o the EPochPropagtion model as it is implemented in the current code.
 This test case is based on 2 VOTables:
@@ -57,6 +57,7 @@ def path_to_withname(data_path, data_sample_url):
     yield votable_path
     os.remove(votable_path)
 
+
 @pytest.fixture
 def path_to_withid(data_path, data_sample_url):
     if check_astropy_version() is False:
@@ -69,6 +70,7 @@ def path_to_withid(data_path, data_sample_url):
 
     yield votable_path
     os.remove(votable_path)
+
 
 @pytest.fixture
 def path_to_badref(data_path, data_sample_url):
@@ -101,7 +103,6 @@ def test_with_name(path_to_withname, delt_coo):
     assert str(mivot_object.epoch.value) == '2013.418'
     assert str(mivot_object.Coordinate_coordSys.spaceRefFrame.value) == 'ICRS'
 
-
     mivot_object = m_viewer.get_next_row_view()
 
     assert abs(mivot_object.longitude.value - 32.2340018) < delt_coo
@@ -128,6 +129,7 @@ def test_with_id(path_to_withid, delt_coo):
     assert abs(mivot_object.pmLongitude.value - 1.5) < delt_coo
     assert abs(mivot_object.pmLatitude.value - -12.30000019) < delt_coo
     assert str(mivot_object.epoch.value) == '2013.418'
+
 
 @pytest.mark.remote_data
 def test_bad_ref(path_to_badref, delt_coo):

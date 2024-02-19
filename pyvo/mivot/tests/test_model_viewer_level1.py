@@ -121,6 +121,7 @@ def m_viewer(data_path, data_sample_url):
 
     yield ModelViewerLevel1(votable_path=votable_path)
     os.remove(votable_path)
+
     
 @pytest.fixture
 def path_to_test_1(data_path, data_sample_url):
@@ -134,7 +135,8 @@ def path_to_test_1(data_path, data_sample_url):
 
     yield votable_path
     os.remove(votable_path)
-    
+
+
 @pytest.fixture
 def path_to_first_instance(data_path, data_sample_url):
     if check_astropy_version() is False:
@@ -152,6 +154,7 @@ def path_to_first_instance(data_path, data_sample_url):
 @pytest.fixture
 def data_path():
     return os.path.dirname(os.path.realpath(__file__))
+
 
 @pytest.fixture
 def data_sample_url():

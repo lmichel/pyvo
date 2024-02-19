@@ -159,9 +159,11 @@ def simple_votable(data_path, data_sample_url):
     yield votable_path
     os.remove(votable_path)
 
+
 @pytest.fixture
 def data_path():
     return os.path.dirname(os.path.realpath(__file__))
+
 
 @pytest.fixture
 def data_sample_url():
