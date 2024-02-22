@@ -22,8 +22,9 @@ from pyvo.mivot.seekers.table_iterator import TableIterator
 from pyvo.mivot.features.static_reference_resolver import StaticReferenceResolver
 from pyvo.mivot.version_checker import check_astropy_version
 from pyvo.mivot.viewer.model_viewer_level2 import ModelViewerLevel2
-from pyvo.mivot.viewer.model_viewer_level3 import ModelViewerLevel3
+from pyvo.mivot.viewer.mivot_instance import MivotInstance
 from pyvo.utils.prototype import prototype_feature
+from pyvo.mivot.utils.mivot_utils import MivotUtils
 # Use defusedxml only if already present in order to avoid a new depency.
 try:
     from defusedxml import ElementTree as etree
@@ -32,7 +33,7 @@ except ImportError:
 
 
 @prototype_feature('MIVOT')
-class ModelViewerLevel1:
+class MivotViewer:
     """
     ModelViewerLevel1 is a PyVO table wrapper aiming at providing
     a model view on VOTable data read with usual tools.
@@ -77,13 +78,12 @@ class ModelViewerLevel1:
             self._annotation_seeker = None
             self._mapping_block = None
             self._mapped_tables = None
-            self._model_viewer_level2 = None
-            self._model_viewer_level3 = None
             self._set_resource(resource_number)
             self._set_mapping_block()
             self._resource_seeker = ResourceSeeker(self._resource)
             self._set_mapped_tables()
             self._connect_table(tableref)
+            self._instance = None
 
     """
     Properties
@@ -127,6 +127,11 @@ class ModelViewerLevel1:
     def current_data_row(self):
         self._assert_table_is_connected()
         return self._current_data_row
+
+    @property
+    def instance(self):
+        self._assert_table_is_connected()
+        return self._instance
 
     """
     Global accessors
@@ -202,16 +207,6 @@ class ModelViewerLevel1:
         """
         self._assert_table_is_connected()
         self._table_iterator._rewind()
-
-    def get_level2(self):
-        """ return the build-in ModelViewerLevel2 instance
-        """
-        return self._model_viewer_level2
-
-    def get_level3(self):
-        """ return the build-in ModelViewerLevel3 instance
-        """
-        return self._model_viewer_level3
 
     """
     Private methods
@@ -323,12 +318,56 @@ class ModelViewerLevel1:
             raise MivotElementNotFound("Can't find the first " + Ele.INSTANCE
                                        + "/" + Ele.COLLECTION + " in " + Ele.TEMPLATES)
 
-    def get_next_row_view(self):
+    def _get_instance_by_type(self, dmtype, all=False):
         """
-        Private method that builds and returns a new access level on the model view,
-        creating an object that contains all INSTANCE and ATTRIBUTE as a dictionary.
-        Both levels 2 and 3 views are updated by this method
+        Return the instance matching with @dmtype.
+        If all is False, returns the first INSTANCE matching with @dmtype.
+        If all is True, returns a list of all instances matching with @dmtype.
+        Parameters
+        ----------
+        dmtype : str
+            The @dmtype to look for.
+        all : bool, optional
+            If True, returns a list of all instances, otherwise returns the first instance.
+            Default is False.
         Returns
+        -------
+        Union[~`xml.etree.ElementTree.Element`, List[~`xml.etree.ElementTree.Element`], None]
+            If all is False, returns the instance matching with @dmtype.
+            If all is True, returns a list of all instances matching with @dmtype.
+            If no matching instance is found, returns None.
+        Raises
+        ------
+        MivotElementNotFound
+            If dmtype is not found.
+        """
+        model_view = self._get_model_view()
+        if all is False:
+            if len(XPath.x_path(model_view,
+                                f'.//INSTANCE[@dmtype="{dmtype}"]')) != 0:
+                for ele in XPath.x_path(model_view,
+                                        f'.//INSTANCE[@dmtype="{dmtype}"]'):
+                    if ele is not None:
+                        return ele
+            else:
+                raise MivotElementNotFound(f"Cannot find dmtype {dmtype} in any instances of the VOTable")
+        else:
+            if len(XPath.x_path(model_view,
+                                f'.//INSTANCE[@dmtype="{dmtype}"]')) != 0:
+                ele = []
+                for elem in XPath.x_path(model_view,
+                                         f'.//INSTANCE[@dmtype="{dmtype}"]'):
+                    ele.append(elem)
+                if ele:
+                    return ele
+            else:
+                raise MivotElementNotFound(f"Cannot find dmtype {dmtype} in any instances of the VOTable")
+            return ele
+        return None
+    
+    def next_row(self):
+        """
+        TONBE USPDTDLMKMKLMKLMKLMKLmklmklmkml
         -------
         pyvo.mivot.viewer.mivot_instance.MivotClass
             Object of the next data row.
@@ -336,13 +375,18 @@ class ModelViewerLevel1:
         self.get_next_row()
         if self._current_data_row is None:
             return None
-        if self._model_viewer_level3 is None:
-            self._model_viewer_level2 = ModelViewerLevel2(self)
-            instance = self._model_viewer_level2.get_instance_by_type(self.get_first_instance())
-            self._model_viewer_level3 = ModelViewerLevel3(instance)
-        self._model_viewer_level3.mivot_class.update_mivot_class(self._current_data_row)
-        return self._model_viewer_level3.mivot_class
 
+        if self._instance is None:
+            xml_instance = self.get_xml_view()
+            self._instance = MivotInstance(**MivotUtils.xml_to_dict(xml_instance))
+        self._instance.update(self._current_data_row)
+
+        return self._instance
+
+    def get_xml_view(self):
+        
+        return self._get_instance_by_type(self.get_first_instance())
+    
     def _assert_table_is_connected(self):
         assert self._connected_table is not None, "Operation failed: no connected data table"
 
