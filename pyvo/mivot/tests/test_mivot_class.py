@@ -1,15 +1,13 @@
 '''
+Test the class generation from a dict.x
 Created on 19 févr. 2024
 
 @author: michel
 '''
-import os
-import pytest
-from urllib.request import urlretrieve
-from pyvo.mivot.viewer.model_viewer_level1 import ModelViewerLevel1
-from pyvo.mivot.viewer.mivot_class import MivotClass
-from pyvo.mivot.utils.exceptions import ResolveException
+from pyvo.mivot.viewer.mivot_instance import MivotInstance
+from pyvo.utils.prototype import activate_features
 
+activate_features('MIVOT')
 
 faze_dict = {
   "dmtype": "EpochPosition",
@@ -29,10 +27,12 @@ faze_dict = {
   },
   }
 
+def test_mivot_viewer_constructor():
+    """Test the class generation from a dict."""
+    mivot_object = MivotInstance(**faze_dict)    
+    assert mivot_object.longitude.value == 52.2340018
+    assert mivot_object.longitude.unit == "deg"
+    assert mivot_object.longitude.dmtype == "RealQuantity"
+    assert mivot_object.dmtype == "EpochPosition"
 
-mivot_object = MivotClass(**faze_dict)
-print(mivot_object.longitude.value)
-print(mivot_object.longitude.unit)
-print(mivot_object.longitude.dmtype)
-print(mivot_object.dmtype)
 

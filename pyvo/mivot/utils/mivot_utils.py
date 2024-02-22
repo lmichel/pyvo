@@ -56,8 +56,6 @@ class MivotUtils(object):
         if child.get('dmtype') is not None:
             attribute['dmtype'] = child.get("dmtype")
         if child.get("value") is not None:
-            print(child.get("value"))
-            print(child.get("dmtype"))
             attribute['value'] = MivotUtils.cast_type_value(child.get("value"), child.get("dmtype"))
         else:
             attribute['value'] = None

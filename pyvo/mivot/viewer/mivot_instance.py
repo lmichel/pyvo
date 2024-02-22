@@ -48,7 +48,6 @@ class MivotInstance:
                 if not self._is_leaf(**value):
                     setattr(self, self._remove_model_name(key, True), MivotInstance(**value))
                 if self._is_leaf(**value):
-                    print(value)
                     setattr(self, self._remove_model_name(key), MivotInstance(**value))
             else:  # ATTRIBUTE
                 if key == 'value':  # We cast the value read in the row
@@ -91,7 +90,8 @@ class MivotInstance:
                         setattr(self, self._remove_model_name(key),
                                 MivotUtils.cast_type_value(row[ref], getattr(self, 'dmtype')))
 
-    def _remove_model_name(self, value, role_instance=False):
+    @staticmethod
+    def _remove_model_name(value, role_instance=False):
         """
         Remove the model name before each colon ":" as well as the type of the object before each point ".".
         If it is an INSTANCE of INSTANCEs, the dmrole represented as the key needs to keep his type object.

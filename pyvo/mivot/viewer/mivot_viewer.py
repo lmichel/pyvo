@@ -5,6 +5,7 @@ This file contains the high-level functions to deal with model views on data.
 from copy import deepcopy
 from astropy import version
 from astropy.io.votable import parse
+from astropy.io.votable.tree import VOTableFile
 from pyvo.dal import DALResults
 from pyvo.mivot import logger
 from pyvo.mivot.utils.vocabulary import Ele, Att
@@ -21,10 +22,10 @@ from pyvo.mivot.seekers.resource_seeker import ResourceSeeker
 from pyvo.mivot.seekers.table_iterator import TableIterator
 from pyvo.mivot.features.static_reference_resolver import StaticReferenceResolver
 from pyvo.mivot.version_checker import check_astropy_version
-from pyvo.mivot.viewer.model_viewer_level2 import ModelViewerLevel2
 from pyvo.mivot.viewer.mivot_instance import MivotInstance
 from pyvo.utils.prototype import prototype_feature
 from pyvo.mivot.utils.mivot_utils import MivotUtils
+from pyvo.mivot.viewer.xml_viewer import XMLViewer
 # Use defusedxml only if already present in order to avoid a new depency.
 try:
     from defusedxml import ElementTree as etree
@@ -64,6 +65,8 @@ class MivotViewer:
         else:
             if isinstance(votable_path, DALResults):
                 self._parsed_votable = votable_path.votable
+            elif isinstance(votable_path, VOTableFile):
+                self._parsed_votable = votable_path
             else:
                 self._parsed_votable = parse(votable_path)
             self._table_iterator = None
@@ -84,6 +87,8 @@ class MivotViewer:
             self._set_mapped_tables()
             self._connect_table(tableref)
             self._instance = None
+            self._xml_viewer = None
+            self.init_instance()
 
     """
     Properties
@@ -132,6 +137,20 @@ class MivotViewer:
     def instance(self):
         self._assert_table_is_connected()
         return self._instance
+
+    @property
+    def xml_view(self):
+        return self.xml_viewer.view
+    
+    @property
+    def xml_viewer(self):
+        if not self._xml_viewer:
+            model_view = XMLViewer(self._get_model_view())
+            model_view.get_instance_by_type(
+                self.get_first_instance(tableref=self.connected_table_ref)
+                )
+            self._xml_viewer = XMLViewer(model_view._xml_view)
+        return self._xml_viewer
 
     """
     Global accessors
@@ -221,32 +240,32 @@ class MivotViewer:
         tableref : str or None, optional
             Identifier of the table. If None, connects to the first table.
         """
+        stableref = tableref
         if tableref is None:
+            stableref = "" 
             self._connected_tableref = Constant.FIRST_TABLE
-            logger.debug("Since " + Ele.TEMPLATES + " table_ref '%s' is None, "
-                         "it will be set as 'first_table' by default", tableref)
+            logger.debug("Since " + Ele.TEMPLATES + "@table_ref is None, "
+                         "the mapping will be applied to the first table.")
         elif tableref not in self._mapped_tables:
             raise MappingException(f"The table {self._connected_tableref} doesn't match with any "
                                    f"mapped_table ({self._mapped_tables}) encountered in "
                                    + Ele.TEMPLATES)
         else:
             self._connected_tableref = tableref
+
         self._connected_table = self._resource_seeker.get_table(tableref)
         if self.connected_table is None:
-            raise ResourceNotFound(f"Cannot find table {tableref} in VOTable")
-        logger.debug("table %s found in VOTable", tableref)
+            raise ResourceNotFound(f"Cannot find table {stableref} in VOTable")
+        logger.debug("table %s found in VOTable", stableref)
         self._templates = deepcopy(self.annotation_seeker.get_templates_block(tableref))
         if self._templates is None:
-            raise MivotElementNotFound("Cannot find " + Ele.TEMPLATES + f" {tableref} ")
-        logger.debug(Ele.TEMPLATES + " %s found ", tableref)
+            raise MivotElementNotFound("Cannot find " + Ele.TEMPLATES + f" {stableref} ")
+        logger.debug(Ele.TEMPLATES + " %s found ", stableref)
         self._table_iterator = TableIterator(self._connected_tableref,
                                              self.connected_table.to_table())
         self._squash_join_and_references()
         self._set_column_indices()
         self._set_column_units()
-        # Reset the model viewer levels on table connection
-        self._model_viewer_level2 = None
-        self._model_viewer_level3 = None
 
     def _get_model_view(self, resolve_ref=True):
         """
@@ -318,53 +337,17 @@ class MivotViewer:
             raise MivotElementNotFound("Can't find the first " + Ele.INSTANCE
                                        + "/" + Ele.COLLECTION + " in " + Ele.TEMPLATES)
 
-    def _get_instance_by_type(self, dmtype, all=False):
-        """
-        Return the instance matching with @dmtype.
-        If all is False, returns the first INSTANCE matching with @dmtype.
-        If all is True, returns a list of all instances matching with @dmtype.
-        Parameters
-        ----------
-        dmtype : str
-            The @dmtype to look for.
-        all : bool, optional
-            If True, returns a list of all instances, otherwise returns the first instance.
-            Default is False.
-        Returns
-        -------
-        Union[~`xml.etree.ElementTree.Element`, List[~`xml.etree.ElementTree.Element`], None]
-            If all is False, returns the instance matching with @dmtype.
-            If all is True, returns a list of all instances matching with @dmtype.
-            If no matching instance is found, returns None.
-        Raises
-        ------
-        MivotElementNotFound
-            If dmtype is not found.
-        """
-        model_view = self._get_model_view()
-        if all is False:
-            if len(XPath.x_path(model_view,
-                                f'.//INSTANCE[@dmtype="{dmtype}"]')) != 0:
-                for ele in XPath.x_path(model_view,
-                                        f'.//INSTANCE[@dmtype="{dmtype}"]'):
-                    if ele is not None:
-                        return ele
-            else:
-                raise MivotElementNotFound(f"Cannot find dmtype {dmtype} in any instances of the VOTable")
-        else:
-            if len(XPath.x_path(model_view,
-                                f'.//INSTANCE[@dmtype="{dmtype}"]')) != 0:
-                ele = []
-                for elem in XPath.x_path(model_view,
-                                         f'.//INSTANCE[@dmtype="{dmtype}"]'):
-                    ele.append(elem)
-                if ele:
-                    return ele
-            else:
-                raise MivotElementNotFound(f"Cannot find dmtype {dmtype} in any instances of the VOTable")
-            return ele
-        return None
+
     
+    def init_instance(self):
+        if self._instance is None:
+            self.get_next_row()
+            xml_instance = self.xml_viewer.get_instance_by_type(
+                self.get_first_instance(tableref=self.connected_table_ref)
+                )
+            self._instance = MivotInstance(**MivotUtils.xml_to_dict(xml_instance))
+            self.rewind()
+        
     def next_row(self):
         """
         TONBE USPDTDLMKMKLMKLMKLMKLmklmklmkml
@@ -377,15 +360,11 @@ class MivotViewer:
             return None
 
         if self._instance is None:
-            xml_instance = self.get_xml_view()
+            xml_instance = self.xml_viewer.view
             self._instance = MivotInstance(**MivotUtils.xml_to_dict(xml_instance))
         self._instance.update(self._current_data_row)
 
         return self._instance
-
-    def get_xml_view(self):
-        
-        return self._get_instance_by_type(self.get_first_instance())
     
     def _assert_table_is_connected(self):
         assert self._connected_table is not None, "Operation failed: no connected data table"

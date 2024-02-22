@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Test for mivot.viewer.mivot_viewer.py
+Test for mivot.viewer.model_viewer_level1.py
 """
 import os
 import pytest
@@ -12,14 +12,13 @@ from pyvo.mivot.version_checker import check_astropy_version
 from pyvo.mivot.viewer.mivot_viewer import MivotViewer
 from pyvo.utils.prototype import activate_features
 from astropy import version as astropy_version
-from pyvo.mivot.utils.xml_utils import XmlUtils
 
 
 activate_features('MIVOT')
 
 
 @pytest.mark.remote_data
-def test_mivot_viewer_constructor(path_to_test_1):
+def test_model_viewer_level1_constructor(path_to_test_1):
     if check_astropy_version() is False:
         pytest.skip("MIVOT test skipped because of the astropy version.")
     with (pytest.raises(TypeError, match="'<' not supported between instances of 'str' and 'int'")
@@ -42,15 +41,15 @@ def test_first_instance_row_view(path_to_first_instance):
     assert m_viewer.get_first_instance("only_collection") == Constant.ROOT_COLLECTION
     with pytest.raises(Exception, match="Can't find the first INSTANCE/COLLECTION in TEMPLATES"):
         m_viewer.get_first_instance("empty")
-    assert m_viewer.get_next_row_view() is not None
-    assert m_viewer.get_next_row_view() is None
+    assert m_viewer.get_next_row() is not None
+    assert m_viewer.get_next_row() is None
 
 
 @pytest.mark.remote_data
-def test_mivot_viewer_table_ref(m_viewer):
+def test_model_viewer_level1_table_ref(m_viewer):
     """
-    Test if the mivot_viewer can find each table_ref and connect to the right table_ref.
-    Test if the mivot_viewer can find each models.
+    Test if the model_viewer_level1 can find each table_ref and connect to the right table_ref.
+    Test if the model_viewer_level1 can find each models.
     """
     if check_astropy_version() is False:
         pytest.skip("MIVOT test skipped because of the astropy version.")
@@ -71,9 +70,9 @@ def test_mivot_viewer_table_ref(m_viewer):
 
 
 @pytest.mark.remote_data
-def test_mivot_viewer_global_getters(m_viewer, data_path):
+def test_model_viewer_level1_global_getters(m_viewer, data_path):
     """
-    Test each getter of the mivot_viewer specific for the GLOBALS.
+    Test each getter of the model_viewer_level1 specific for the GLOBALS.
     """
     if check_astropy_version() is False:
         pytest.skip("MIVOT test skipped because of the astropy version.")
@@ -163,22 +162,4 @@ def data_sample_url():
 
 
 if __name__ == '__main__':
-    mivot_viewer = MivotViewer("t.vot")
-    
-    # access to XML serialization
-    while mivot_viewer.next_row():
-        XmlUtils.pretty_print(mivot_viewer.get_xml_view())
-        
-    # access to astropy table rows
-    mivot_viewer.rewind()
-    while mivot_viewer.next_row():
-        print(f"{mivot_viewer.current_data_row}")
-
-    # access with mivot object
-    mivot_viewer.rewind()
-    while mivot_viewer.next_row():
-        mivot_object = mivot_viewer.instance
-        print(f"{mivot_object.dmtype}")
-        print(f"{mivot_object.latitude.value} {mivot_object.longitude.value}")
-        
-        
+    pytest.main()
