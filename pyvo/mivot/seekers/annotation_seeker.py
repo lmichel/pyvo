@@ -8,6 +8,7 @@ from pyvo.mivot import logger
 from pyvo.mivot.utils.constant import Constant
 from pyvo.mivot.utils.xpath_utils import XPath
 from pyvo.utils.prototype import prototype_feature
+from abc import abstractstaticmethod
 
 
 @prototype_feature('MIVOT')
@@ -96,7 +97,8 @@ class AnnotationSeeker:
                 ele.tag = tag + '_' + str(cpt)
                 cpt += 1
 
-    def _name_match(self, name, expected):
+    @staticmethod
+    def _name_match(name, expected):
         """
         Return true if name matches expected whatever the namespace
         Parameters
@@ -240,11 +242,20 @@ class AnnotationSeeker:
             Format: {'dmtype': [instance], ...}
         """
         retour = {Ele.GLOBALS: [], Ele.TEMPLATES: {}}
-        eset = XPath.x_path_contains(self._globals_block, ".//" + Ele.INSTANCE, Att.dmtype, dmtype_pattern)
+        eset = XPath.x_path_contains(self._globals_block,
+                                     ".//" + Ele.INSTANCE,
+                                     Att.dmtype,
+                                     dmtype_pattern
+                                     )
         retour[Ele.GLOBALS] = eset
         for tableref, block in self._templates_blocks.items():
             retour[Ele.TEMPLATES][tableref] = (
-                XPath.x_path_contains(block, ".//" + Ele.INSTANCE, Att.dmtype, dmtype_pattern))
+                XPath.x_path_contains(block,
+                                      ".//" + Ele.INSTANCE,
+                                      Att.dmtype,
+                                      dmtype_pattern
+                                      )
+                )
         return retour
 
     """
@@ -273,7 +284,8 @@ class AnnotationSeeker:
             List of @dmid of GLOBALS/INSTANCE
         """
         retour = []
-        eset = XPath.x_path(self._globals_block, ".//" + Ele.INSTANCE + "[@" + Att.dmid + "]")
+        eset = XPath.x_path(self._globals_block, 
+                            ".//" + Ele.INSTANCE + "[@" + Att.dmid + "]")
         for ele in eset:
             retour.append(ele.get(Att.dmid))
         return retour
@@ -289,7 +301,9 @@ class AnnotationSeeker:
         -------
         dict: `~xml.etree.ElementTree.Element`
         """
-        eset = XPath.x_path(self._globals_block, ".//" + Ele.INSTANCE + "[@" + Att.dmid + "='" + dmid + "']")
+        eset = XPath.x_path(self._globals_block,
+                            (".//" + Ele.INSTANCE + "[@" + Att.dmid + "='" + dmid + "']")
+                            )
         for ele in eset:
             return ele
         return None
@@ -323,7 +337,8 @@ class AnnotationSeeker:
         templates_block = self.get_templates_block(tableref)
         if templates_block is None:
             return None
-        eset = XPath.x_path(templates_block, ".//" + Ele.INSTANCE + "[@" + Att.dmid + "='" + dmid + "']")
+        eset = XPath.x_path(templates_block,
+                            ".//" + Ele.INSTANCE + "[@" + Att.dmid + "='" + dmid + "']")
         for ele in eset:
             return ele
         return None

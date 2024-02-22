@@ -217,7 +217,7 @@ class MivotViewer:
             The next data row.
         """
         self._assert_table_is_connected()
-        self._current_data_row = self._table_iterator._get_next_row()
+        self._current_data_row = self._table_iterator.get_next_row()
         return self._current_data_row
 
     def rewind(self):
@@ -225,7 +225,7 @@ class MivotViewer:
         Rewind the table iterator on the table the veizer is connected with.
         """
         self._assert_table_is_connected()
-        self._table_iterator._rewind()
+        self._table_iterator.rewind()
 
     """
     Private methods
