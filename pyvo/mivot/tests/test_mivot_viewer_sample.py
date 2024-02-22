@@ -165,11 +165,11 @@ def data_sample_url():
 
 if __name__ == '__main__':
     mivot_viewer = MivotViewer("t.vot")
-    
+
     # access to XML serialization (ex lebel 2)
     while mivot_viewer.next_row():
         XmlUtils.pretty_print(mivot_viewer.xml_view)
-        
+
     # access to astropy table rows
     mivot_viewer.rewind()
     while mivot_viewer.next_row():
@@ -181,8 +181,8 @@ if __name__ == '__main__':
         mivot_object = mivot_viewer.instance
         print(f"{mivot_object.dmtype}")
         print(f"{mivot_object.latitude.value} {mivot_object.longitude.value}")
-        
-    # parse the VOTable outside of the viewer    
+
+    # parse the VOTable outside of the viewer
     votable = parse("t.vot")
     table = votable.resources[0].tables[0]
     # init the viewer
@@ -193,5 +193,3 @@ if __name__ == '__main__':
         mivot_object.update(rec)
         print(f"{mivot_object.dmtype}")
         print(f"{mivot_object.latitude.value} {mivot_object.longitude.value}")
-
-        

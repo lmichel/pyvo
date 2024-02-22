@@ -8,7 +8,6 @@ from pyvo.mivot import logger
 from pyvo.mivot.utils.constant import Constant
 from pyvo.mivot.utils.xpath_utils import XPath
 from pyvo.utils.prototype import prototype_feature
-from abc import abstractstaticmethod
 
 
 @prototype_feature('MIVOT')
@@ -248,14 +247,9 @@ class AnnotationSeeker:
                                      dmtype_pattern
                                      )
         retour[Ele.GLOBALS] = eset
-        for tableref, block in self._templates_blocks.items():
-            retour[Ele.TEMPLATES][tableref] = (
-                XPath.x_path_contains(block,
-                                      ".//" + Ele.INSTANCE,
-                                      Att.dmtype,
-                                      dmtype_pattern
-                                      )
-                )
+        for (tableref, block) in self._templates_blocks.items():
+            retour[Ele.TEMPLATES][tableref] = XPath.x_path_contains(block, './/'
+                     + Ele.INSTANCE, Att.dmtype, dmtype_pattern)
         return retour
 
     """
@@ -284,7 +278,7 @@ class AnnotationSeeker:
             List of @dmid of GLOBALS/INSTANCE
         """
         retour = []
-        eset = XPath.x_path(self._globals_block, 
+        eset = XPath.x_path(self._globals_block,
                             ".//" + Ele.INSTANCE + "[@" + Att.dmid + "]")
         for ele in eset:
             retour.append(ele.get(Att.dmid))
@@ -442,13 +436,19 @@ class AnnotationSeeker:
                             + coll_dmid + "']/" + Ele.INSTANCE + "/" + Att.primarykey
                             + "[@" + Att.value + "='" + key_value + "']")
         if len(eset) == 0:
-            raise MivotElementNotFound(Ele.INSTANCE + " with " + Att.primarykey + f" = {key_value} in "
-                                       + Ele.COLLECTION + " " + Att.dmid + f" {key_value} not found")
+            message = (f"{Ele.INSTANCE} with {Att.primarykey} = {key_value} in "
+                       f"{Ele.COLLECTION} {Att.dmid} {key_value} not found"
+                       )
+            raise MivotElementNotFound(message)
         if len(eset) > 1:
-            raise MappingException("More than one " + Ele.INSTANCE + " with " + Att.primarykey
-                                   + f" = {key_value} found in " + Ele.COLLECTION + " "
-                                   + Att.dmid + f" {key_value}")
-        logger.debug(Ele.INSTANCE + " with " + Att.primarykey + "=%s found in " + Ele.COLLECTION + " "
+            message = (
+                f"More than one {Ele.INSTANCE} with {Att.primarykey}"
+                f" = {key_value} found in {Ele.COLLECTION} "
+                f"{Att.dmid} {key_value}"
+            )
+            raise MappingException(message)
+        logger.debug(Ele.INSTANCE + " with " + Att.primarykey + "=%s found in "
+                     + Ele.COLLECTION + " "
                      + Att.dmid + "=%s", key_value, coll_dmid)
         parent_map = {c: p for p in self._globals_block.iter() for c in p}
         return parent_map[eset[0]]

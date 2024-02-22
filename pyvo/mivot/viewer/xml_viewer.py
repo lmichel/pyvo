@@ -10,11 +10,11 @@ from pyvo.utils.prototype import prototype_feature
 @prototype_feature('MIVOT')
 class XMLViewer:
     """
-    The ModelViewerLevel2 takes an instance of the 
+    The ModelViewerLevel2 takes an instance of the
     `~pyvo.mivot.viewer.model_viewer_level1.ModelViewerLevel1`
     object as a parameter and provides multiple getters
     on the XML that already has references
-    resolved by default with 
+    resolved by default with
     `~pyvo.mivot.viewer.model_viewer_level1.ModelViewerLevel1._get_model_view()`.
     """
     def __init__(self, xml_view):
@@ -23,7 +23,7 @@ class XMLViewer:
     @property
     def view(self):
         return self._xml_view
-    
+
     def get_instance_by_role(self, dmrole, all_instances=False):
         """
         Return the instance matching with @dmrole.
@@ -160,5 +160,3 @@ class XMLViewer:
                 raise MivotElementNotFound(f"Cannot find dmrole {dmrole} in any collections of the VOTable")
             return ele
         return None
-
-    
