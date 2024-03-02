@@ -104,7 +104,7 @@ class MivotInstance:
         Parameters
         ----------
         value (str): The string to process.
-        role_instance (bool, optional): If True, keeps the type object for dmroles representing 
+        role_instance (bool, optional): If True, keeps the type object for dmroles representing
                                         an INSTANCE of INSTANCEs. Default is False.
         """
         if isinstance(value, str):
@@ -146,7 +146,8 @@ class MivotInstance:
         Parameters
         ----------
         obj (dict or object): The dictionary or object to display.
-        classkey (str, optional): The key to use for the object's class name in the dictionary, default is None.
+        classkey (str, optional): The key to use for the object's class name
+                                  in the dictionary, default is None.
         Returns
         -------
         dict or object
