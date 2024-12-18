@@ -30,6 +30,14 @@ from pyvo.mivot.version_checker import check_astropy_version
 __all__ = ["MivotAnnotations"]
 
 
+#https://www.ivoa.net/rdf/refframe/2022-02-22/refframe.html
+suggested_ref_frames = ["FK4", "FK5", "ICRS", "GALACTIC", "SUPER_GALACTIC", "ECLIPTIC"]
+suggested_ref_positions = ["BARYCENTER", "GEOCENTER", "TOPOCENTER"]
+#https://www.ivoa.net/rdf/timescale/2019-03-15/timescale.html
+suggested_time_frames = ["TAI", "TT", "TDT", "ET", "IAT", "UT1",
+                        "UTC", "GMT", "GPS", "TCG", "TCB", "TBD", "LOCAL"]
+IVOA_STRING = "ivoa:string"
+
 @prototype_feature("MIVOT")
 class MivotAnnotations:
     """
@@ -244,6 +252,44 @@ class MivotAnnotations:
             The URL of the VO-DML file associated with the model.
         """
         self._models[model_name] = vodml_url
+
+    def add_simple_space_frame(self, ref_frame="ICRS", *, ref_position="BARYCENTER", equinox=None, dmid=None):
+        #refLocation  not supported
+
+        self.add_model("ivoa", vodml_url="https://www.ivoa.net/xml/VODML/IVOA-v1.vo-dml.xml")
+        self.add_model("coords", vodml_url="https://www.ivoa.net/xml/STC/20200908/Coords-v1.0.vo-dml.xml")
+        
+        space_frame_instance = MivotInstance(dmtype="coords:SpaceSys", dmid=dmid)
+        space_frame_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:SpaceFrame.spaceRefFrame", value=ref_frame)
+        
+        if equinox is not None:
+            space_frame_instance.add_attribute(dmtype="coords:Epoch", dmrole="coords:SpaceFrame.equinox", value=equinox)
+
+        ref_position_instance = MivotInstance(dmtype="coords:StdRefLocation", dmrole="coords:SpaceFrame.refPosition")
+        ref_position_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:StdRefLocation.position", value=ref_position)
+        space_frame_instance.add_instance(ref_position_instance)
+        
+        self.add_globals(space_frame_instance)
+         
+    def add_simple_time_frame(self, ref_frame="TCB", *, ref_position="BARYCENTER", dmid=None):
+        #refDirection  not supported
+        self.add_model("coords", vodml_url="https://www.ivoa.net/xml/STC/20200908/Coords-v1.0.vo-dml.xml")
+        
+        if ref_frame not in suggested_time_frames:
+            logging.warning("Ref frame %s is not in %s, make sure there is no typo", ref_frame, suggested_time_frames)     
+        if ref_position not in suggested_ref_positions:
+            logging.warning("Ref position %s is not in %s, make sure there is no typo", ref_position, suggested_ref_positions) 
+
+        time_sys_instance = MivotInstance(dmtype="coords:TimeSys", dmid=dmid)
+        time_frame_instance = MivotInstance(dmtype="coords:TimeFrame", dmrole="coords:PhysicalCoordSys.frame")
+        time_frame_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:TimeFrame.timescale", value=ref_frame)
+        
+        ref_position_instance = MivotInstance(dmtype="coords:StdRefLocation", dmrole="coords:TimeFrame.refPosition")
+        ref_position_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:StdRefLocation.position", value=ref_position)
+        
+        time_frame_instance.add_instance(ref_position_instance)
+        time_sys_instance.add_instance(time_frame_instance)
+        self.add_globals(time_sys_instance)
 
     def set_report(self, status, message):
         """
