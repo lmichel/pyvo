@@ -30,12 +30,6 @@ from pyvo.mivot.version_checker import check_astropy_version
 __all__ = ["MivotAnnotations"]
 
 
-#https://www.ivoa.net/rdf/refframe/2022-02-22/refframe.html
-suggested_ref_frames = ["FK4", "FK5", "ICRS", "GALACTIC", "SUPER_GALACTIC", "ECLIPTIC"]
-suggested_ref_positions = ["BARYCENTER", "GEOCENTER", "TOPOCENTER"]
-#https://www.ivoa.net/rdf/timescale/2019-03-15/timescale.html
-suggested_time_frames = ["TAI", "TT", "TDT", "ET", "IAT", "UT1",
-                        "UTC", "GMT", "GPS", "TCG", "TCB", "TBD", "LOCAL"]
 IVOA_STRING = "ivoa:string"
 
 @prototype_feature("MIVOT")
@@ -56,6 +50,15 @@ class MivotAnnotations:
 
     Attributes
     ----------
+    suggested_space_frames: string array, class attribute
+        A warning is emitted if a frame not in this list is used to build a space frame.
+        This list matches https://www.ivoa.net/rdf/refframe/2022-02-22/refframe.html.
+    suggested_ref_positions: string array, class attribute
+        A warning is emitted if a reference position not in this list is 
+        used to build a space or a time frame.
+    suggested_time_frames: string array, class attribute
+        A warning is emitted if a frame not in this list is used to build a space frame.
+        This list matches https://www.ivoa.net/rdf/timescale/2019-03-15/timescale.html.
     _models : dict
         A dictionary containing models with their names as keys and URLs as values.
     _report_status : bool
@@ -71,6 +74,13 @@ class MivotAnnotations:
     _mivot_block : str
         The complete MIVOT block as a string.
     """
+
+    #https://www.ivoa.net/rdf/refframe/2022-02-22/refframe.html
+    suggested_space_frames = ["FK4", "FK5", "ICRS", "GALACTIC", "SUPER_GALACTIC", "ECLIPTIC"]
+    suggested_ref_positions = ["BARYCENTER", "GEOCENTER", "TOPOCENTER"]
+    #https://www.ivoa.net/rdf/timescale/2019-03-15/timescale.html
+    suggested_time_frames = ["TAI", "TT", "TDT", "ET", "IAT", "UT1",
+                        "UTC", "GMT", "GPS", "TCG", "TCB", "TBD", "LOCAL"]
 
     def __init__(self):
         """
@@ -254,11 +264,36 @@ class MivotAnnotations:
         self._models[model_name] = vodml_url
 
     def add_simple_space_frame(self, ref_frame="ICRS", *, ref_position="BARYCENTER", equinox=None, dmid=None):
-        #refLocation  not supported
-
+        """
+        Add to the globals a SpaceSys instance as defined in  the Coordinates 
+        data model V1.0 (https://ivoa.net/documents/Coords/20221004/index.html)
+        
+        - This function only implements the most used features. The custom reference position,
+          that can be used for TOPOCENTER frames is not supported.
+          However, methods that implement missing features can easily be derived from this code.
+        - A warning is emitted   if either ref_frame or ref_position have unexpected values.
+        - No error is risen if the parameter values are not consistent.
+        parameters: 
+        ==========
+        ref_frame : string, default ICRS
+        ref_position : string, default BARYCENTER
+        equinox : string, default None
+        dmid : string, default None
+        """
+        # add (or overwrite) used models
         self.add_model("ivoa", vodml_url="https://www.ivoa.net/xml/VODML/IVOA-v1.vo-dml.xml")
         self.add_model("coords", vodml_url="https://www.ivoa.net/xml/STC/20200908/Coords-v1.0.vo-dml.xml")
         
+        # check whether ref_frame and ref_position are set with appropriate values
+        if ref_frame not in MivotAnnotations.suggested_time_frames:
+            logging.warning("Ref frame %s is not in %s, make sure there is no typo",
+                            ref_frame, MivotAnnotations.suggested_space_frames)     
+        if ref_position not in MivotAnnotations.suggested_ref_positions:
+            logging.warning("Ref position %s is not in %s, make sure there is no typo",
+                            ref_position,
+                            MivotAnnotations.suggested_ref_positions) 
+
+        #Build the SpaceSys instance component by component
         space_frame_instance = MivotInstance(dmtype="coords:SpaceSys", dmid=dmid)
         space_frame_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:SpaceFrame.spaceRefFrame", value=ref_frame)
         
@@ -268,18 +303,40 @@ class MivotAnnotations:
         ref_position_instance = MivotInstance(dmtype="coords:StdRefLocation", dmrole="coords:SpaceFrame.refPosition")
         ref_position_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:StdRefLocation.position", value=ref_position)
         space_frame_instance.add_instance(ref_position_instance)
-        
+        # add the SpaceSys instance to the GLOBALS block
         self.add_globals(space_frame_instance)
          
     def add_simple_time_frame(self, ref_frame="TCB", *, ref_position="BARYCENTER", dmid=None):
-        #refDirection  not supported
-        self.add_model("coords", vodml_url="https://www.ivoa.net/xml/STC/20200908/Coords-v1.0.vo-dml.xml")
+        """
+        Add to the globals a TimeSys instance as defined in  the Coordinates 
+        data model V1.0 (https://ivoa.net/documents/Coords/20221004/index.html)
         
-        if ref_frame not in suggested_time_frames:
-            logging.warning("Ref frame %s is not in %s, make sure there is no typo", ref_frame, suggested_time_frames)     
-        if ref_position not in suggested_ref_positions:
-            logging.warning("Ref position %s is not in %s, make sure there is no typo", ref_position, suggested_ref_positions) 
+        - This function only implements the most used features. The custom reference direction,
+          is not supported.
+          However, methods that implement missing features can easily be derived from this code.
+        - A warning is emitted   if either ref_frame or ref_position have unexpected values.
+        - No error is risen if the parameter values are not consistent.
+        parameters: 
+        ==========
+        ref_frame : string, default ICRS
+        ref_position : string, default BARYCENTER
+        equinox : string, default None
+        dmid : string, default None
+        """
 
+        # add (or overwrite) used models
+        self.add_model("ivoa", vodml_url="https://www.ivoa.net/xml/VODML/IVOA-v1.vo-dml.xml")
+        self.add_model("coords", vodml_url="https://www.ivoa.net/xml/STC/20200908/Coords-v1.0.vo-dml.xml")
+        # check whether ref_frame and ref_position are set with appropriate values
+        if ref_frame not in MivotAnnotations.suggested_time_frames:
+            logging.warning("Ref frame %s is not in %s, make sure there is no typo",
+                            ref_frame,
+                            MivotAnnotations.suggested_time_frames)     
+        if ref_position not in MivotAnnotations.suggested_ref_positions:
+            logging.warning("Ref position %s is not in %s, make sure there is no typo",
+                            ref_position,
+                            MivotAnnotations.suggested_ref_positions) 
+        #Build the TimeSys instance component by component
         time_sys_instance = MivotInstance(dmtype="coords:TimeSys", dmid=dmid)
         time_frame_instance = MivotInstance(dmtype="coords:TimeFrame", dmrole="coords:PhysicalCoordSys.frame")
         time_frame_instance.add_attribute(dmtype=IVOA_STRING, dmrole="coords:TimeFrame.timescale", value=ref_frame)
@@ -289,6 +346,7 @@ class MivotAnnotations:
         
         time_frame_instance.add_instance(ref_position_instance)
         time_sys_instance.add_instance(time_frame_instance)
+        # add the TimeSys instance to the GLOBALS block
         self.add_globals(time_sys_instance)
 
     def set_report(self, status, message):
