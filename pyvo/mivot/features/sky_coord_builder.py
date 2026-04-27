@@ -161,11 +161,11 @@ class SkyCoordBuilder:
             return (Time(time.byear_str) if besselian else time)
         elif dmtype == "mango:DecimalYear":
             return Time(float(timestamp), format="decimalyear")
-        elif dmtype == "mango:BesselianYear":
+        elif dmtype == "mango:BesselianEpoch":
             if isinstance(timestamp, str) and (timestamp.startswith("B") or timestamp.startswith("J")):
                 timestamp = timestamp[1:]
             return Time(float(timestamp), format="byear")
-        elif dmtype == "mango:JulianYear":
+        elif dmtype == "mango:JulianEpoch":
             if isinstance(timestamp, str) and (timestamp.startswith("B") or timestamp.startswith("J")):
                 timestamp = timestamp[1:]
             return Time(float(timestamp), format="jyear")
